@@ -318,92 +318,92 @@ for b_iter in range(Nb):
 # ax.legend(['w/o indicial response','w/ indicial response'])
 # ax.grid()
 
-fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
-ax.plot(psi*180/np.pi,aoa[:,30]*180/np.pi)
-ax.plot(psi*180/np.pi,aoa_eff[:,30]*180/np.pi)
-ax.set_ylabel('$ \\alpha \ [deg]$')
-ax.set_xlabel('$\psi \ [deg]$')
-# ax.set_xlim([0,360])
-# ax.set_ylim([-0.01,0.01])
-ax.legend(['w/o indicial response','w/ indicial response'])
-ax.grid()
-
-
-fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
-plt.subplots_adjust(left = .15)
-ax.plot(psi/(2*np.pi),dCT[:,30])
-ax.set_ylabel('$\partial CT/\partial \psi$')
-ax.set_xlabel('Rotation')
-ax.grid()
+# fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
+# ax.plot(psi*180/np.pi,aoa[:,30]*180/np.pi)
+# ax.plot(psi*180/np.pi,aoa_eff[:,30]*180/np.pi)
+# ax.set_ylabel('$ \\alpha \ [deg]$')
+# ax.set_xlabel('$\psi \ [deg]$')
+# # ax.set_xlim([0,360])
+# # ax.set_ylim([-0.01,0.01])
+# ax.legend(['w/o indicial response','w/ indicial response'])
+# ax.grid()
 
 
 # fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
-# ax.plot(ac.rotors[0].blades[0].r,ac.rotors[0].blades[0].lam)
-# ax.set_xlabel('r/R')
+# plt.subplots_adjust(left = .15)
+# ax.plot(psi/(2*np.pi),dCT[:,30])
+# ax.set_ylabel('$\partial CT/\partial \psi$')
+# ax.set_xlabel('Rotation')
 # ax.grid()
-# ax.set_ylabel('$\lambda$')
-# ax.set_xlim([0,1])
-# ax.set_ylim([0,.1])
 
 
-# fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
-# ax.plot(ac.rotors[0].blades[0].r,ac.rotors[0].blades[0].dCT)
-# ax.set_xlabel('r/R')
-# ax.grid()
-# # ax.set_ylabel('$\dC_T$')
-# ax.set_xlim([0,1])
-# ax.set_ylim([0,.03])
-
-# dcm = np.array([[np.cos(psi),np.sin(psi),np.zeros(len(psi))],[-np.sin(psi),np.cos(psi),np.zeros(len(psi))],[np.zeros(len(psi)),np.zeros(len(psi)),np.ones(len(psi))]])
-
-# V_ind_trans = np.zeros(V_ind.shape).transpose(2,0,1,-1)
-# for b_iter in range(Nb):
-#     dcm(psi+(2*np.pi/Nb*b_iter))
-#     V_ind_trans[b_iter] = np.matmul(dcm(psi+(2*np.pi/Nb*b_iter)),V_ind[:,:,b_iter])
+# # fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
+# # ax.plot(ac.rotors[0].blades[0].r,ac.rotors[0].blades[0].lam)
+# # ax.set_xlabel('r/R')
+# # ax.grid()
+# # ax.set_ylabel('$\lambda$')
+# # ax.set_xlim([0,1])
+# # ax.set_ylim([0,.1])
 
 
-# V_th = (-V_ind[:360,0,0].T*np.sin(psi[:360])+V_ind[:360,1,0].T*np.cos(psi[:360])).T
-# V_r = (V_ind[:360,1,0].T*np.sin(psi[:360])+V_ind[:360,0,0].T*np.cos(psi[:360])).T
+# # fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
+# # ax.plot(ac.rotors[0].blades[0].r,ac.rotors[0].blades[0].dCT)
+# # ax.set_xlabel('r/R')
+# # ax.grid()
+# # # ax.set_ylabel('$\dC_T$')
+# # ax.set_xlim([0,1])
+# # ax.set_ylim([0,.03])
 
-# np.matmul(dcm,V_ind[:,:,0])[:10,1,30]
+# # dcm = np.array([[np.cos(psi),np.sin(psi),np.zeros(len(psi))],[-np.sin(psi),np.cos(psi),np.zeros(len(psi))],[np.zeros(len(psi)),np.zeros(len(psi)),np.ones(len(psi))]])
 
-# levels = np.linspace(np.min(V_ind[:90,-1,0]), np.max(V_ind[:90,-1,0]), 50)
+# # V_ind_trans = np.zeros(V_ind.shape).transpose(2,0,1,-1)
+# # for b_iter in range(Nb):
+# #     dcm(psi+(2*np.pi/Nb*b_iter))
+# #     V_ind_trans[b_iter] = np.matmul(dcm(psi+(2*np.pi/Nb*b_iter)),V_ind[:,:,b_iter])
+
+
+# # V_th = (-V_ind[:360,0,0].T*np.sin(psi[:360])+V_ind[:360,1,0].T*np.cos(psi[:360])).T
+# # V_r = (V_ind[:360,1,0].T*np.sin(psi[:360])+V_ind[:360,0,0].T*np.cos(psi[:360])).T
+
+# # np.matmul(dcm,V_ind[:,:,0])[:10,1,30]
+
+# # levels = np.linspace(np.min(V_ind[:90,-1,0]), np.max(V_ind[:90,-1,0]), 50)
+
+# # fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+# # quant = lam[:360]
+# # levels = np.linspace(np.min(quant), np.max(quant), 50)
+# # dist = ax.contourf(psi[:360], ac.rotors[0].blades[0].r, quant.T, levels=levels,cmap = cmap,norm=mcolors.CenteredNorm())
+# # ax.set_ylim(0, 1)
+# # ax.set_yticks(ax.get_yticks()[::2])
+# # cbar = fig.colorbar(dist,format = '%1.2e',pad = .075)
+# # cbar.ax.set_ylabel('$\lambda$')
 
 # fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-# quant = lam[:360]
+# quant = dCT[:int(360/dpsi)]
 # levels = np.linspace(np.min(quant), np.max(quant), 50)
-# dist = ax.contourf(psi[:360], ac.rotors[0].blades[0].r, quant.T, levels=levels,cmap = cmap,norm=mcolors.CenteredNorm())
+# dist = ax.contourf(psi[:int(360/dpsi)], ac.rotors[0].blades[0].r, quant.T, levels=levels,cmap = cmap,norm=mcolors.CenteredNorm())
+# # ax.set_ylim(0, 1)
+# ax.set_yticks(ax.get_yticks()[::2])
+# cbar = fig.colorbar(dist,format = '%1.2e',pad = .075)
+# cbar.ax.set_ylabel('$\partial CT/\partial \psi$')
+
+# fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+# quant = np.gradient(dCT[:int(360/dpsi)],axis = 0)
+# levels = np.linspace(np.min(quant), np.max(quant), 50)
+# dist = ax.contourf(psi[:int(360/dpsi)], ac.rotors[0].blades[0].r, quant.T, levels=levels,cmap = cmap,norm=mcolors.CenteredNorm())
 # ax.set_ylim(0, 1)
 # ax.set_yticks(ax.get_yticks()[::2])
 # cbar = fig.colorbar(dist,format = '%1.2e',pad = .075)
-# cbar.ax.set_ylabel('$\lambda$')
+# cbar.ax.set_ylabel('$\partial CT/\partial \psi$')
 
-fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-quant = dCT[:int(360/dpsi)]
-levels = np.linspace(np.min(quant), np.max(quant), 50)
-dist = ax.contourf(psi[:int(360/dpsi)], ac.rotors[0].blades[0].r, quant.T, levels=levels,cmap = cmap,norm=mcolors.CenteredNorm())
-# ax.set_ylim(0, 1)
-ax.set_yticks(ax.get_yticks()[::2])
-cbar = fig.colorbar(dist,format = '%1.2e',pad = .075)
-cbar.ax.set_ylabel('$\partial CT/\partial \psi$')
-
-fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-quant = np.gradient(dCT[:int(360/dpsi)],axis = 0)
-levels = np.linspace(np.min(quant), np.max(quant), 50)
-dist = ax.contourf(psi[:int(360/dpsi)], ac.rotors[0].blades[0].r, quant.T, levels=levels,cmap = cmap,norm=mcolors.CenteredNorm())
-ax.set_ylim(0, 1)
-ax.set_yticks(ax.get_yticks()[::2])
-cbar = fig.colorbar(dist,format = '%1.2e',pad = .075)
-cbar.ax.set_ylabel('$\partial CT/\partial \psi$')
-
-# fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
-# quant = lam[:360]
-# levels = np.linspace(np.min(quant), np.max(quant), 50)
-# dist = ax.contourf(psi[:360], ac.rotors[0].blades[0].r, quant.T, levels=levels,cmap = cmap,norm=mcolors.CenteredNorm())
-# ax.set_ylim(0, 1)
-# ax.set_yticks(ax.get_yticks()[::2])
-# cbar = fig.colorbar(dist,format = '%1.2e',pad = .075)
-# cbar.ax.set_ylabel('$\lambda_i$')
+# # fig, ax = plt.subplots(subplot_kw=dict(projection='polar'))
+# # quant = lam[:360]
+# # levels = np.linspace(np.min(quant), np.max(quant), 50)
+# # dist = ax.contourf(psi[:360], ac.rotors[0].blades[0].r, quant.T, levels=levels,cmap = cmap,norm=mcolors.CenteredNorm())
+# # ax.set_ylim(0, 1)
+# # ax.set_yticks(ax.get_yticks()[::2])
+# # cbar = fig.colorbar(dist,format = '%1.2e',pad = .075)
+# # cbar.ax.set_ylabel('$\lambda_i$')
 
 
 
