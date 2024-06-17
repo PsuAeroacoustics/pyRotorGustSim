@@ -1,5 +1,5 @@
 &caseName
-	globalFolderName='/Users/danielweitsman/codes/github/DanWeitsman/unsteady_BEMT/single_blade_arbitrary_gust/'
+	globalFolderName='/home/dweitsma/codes/github/DanWeitsman/rotor_gust_interaction/single_blade_arbitrary_gust/'
 	caseNameFile='single_blade_arbitrary_gust.nam'
 /
 
