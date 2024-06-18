@@ -1,0 +1,22 @@
+{	"case_name":"5_Mt_3_Vg_58",
+	"computational_params": {
+		"d_psi": 0.1,
+		"spanwise_elements": 48,
+        "number_of_revs": 2
+	},
+	"flight_params":
+		{
+			"density": 1.2055,
+			"kinematic_viscosity":14.88e-6,
+			"omega": 523.6,
+			"sos": 341.7,
+			"C_T_target":0.0015
+		},
+
+	"gust_params": 
+	{
+		"strength": 6.25,
+		"core_size":0.78,
+		"azimuthal_location":90
+	}
+}

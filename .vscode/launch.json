@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "cwd":"${workspaceFolder}/cases/baseline",
+            "cwd":"${workspaceFolder}/cases/scaled_v_gust_sweep",
             "args": ["--aero","--acs","--plot","-input_geom", "bl_geom.json", "-input_param", "bl_params.json" ,"-observer_param", "observers.json", "-acs_param", "acs_params.json"]
         }
     ]

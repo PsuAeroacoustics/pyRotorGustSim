@@ -1,0 +1,22 @@
+{	"case_name":"5_Mt_375_Vg_47",
+	"computational_params": {
+		"d_psi": 0.1,
+		"spanwise_elements": 48,
+        "number_of_revs": 2
+	},
+	"flight_params":
+		{
+			"density": 1.2055,
+			"kinematic_viscosity":14.88e-6,
+			"omega": 654.5,
+			"sos": 341.7,
+			"C_T_target":0.0015
+		},
+
+	"gust_params": 
+	{
+		"strength": 5,
+		"core_size":0.78,
+		"azimuthal_location":90
+	}
+}
