@@ -10,8 +10,8 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "cwd":"${workspaceFolder}/cases/scaled_v_gust_sweep",
-            "args": ["--aero","--acs","--plot","-input_geom", "bl_geom.json", "-input_param", "bl_params.json" ,"-observer_param", "observers.json", "-acs_param", "acs_params.json"]
+            "cwd":"${workspaceFolder}/cases/filtered",
+            "args": ["--filt","--opt","--aero","--acs","--plot","-input_geom", "geom.json", "-input_param", "params.json" ,"-observer_param", "observers.json", "-acs_param", "acs_params.json","-res_param","mdof_geom_params.json"]
         }
     ]
 }

@@ -4,7 +4,7 @@ from AnalyzeDegenGeom import *
 from ProcessGeom import *
 
 #%%
-def wopwop_input_configure(geom_params,input_params,observer_params,acs_params,saved_params):
+def wopwop_input_configure(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
 
     # initializes namelist and environmental object
     nml = []

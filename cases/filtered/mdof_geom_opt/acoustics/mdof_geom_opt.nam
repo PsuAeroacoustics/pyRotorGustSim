@@ -6,10 +6,10 @@
 	sigmaFolderName='/'
 	debugLevel=0
 	ASCIIOutputFlag=.true.
-	OASPLdBFlag=.true.
+	OASPLdBFlag=.false.
 	OASPLdBAFlag=.false.
-	spectrumFlag=.true.
-	SPLdBFlag=.true.
+	spectrumFlag=.false.
+	SPLdBFlag=.false.
 	SPLdBAFlag=.false.
 	pressureGradient1AFlag=.false.
 	acousticPressureFlag=.true.
@@ -46,10 +46,10 @@
 /
 
 &ObserverIn
-	nt=7200
+	nt=2880
 	Title='mic array'
 	tMin=0.025983976292045765
-	tMax=0.0519607348128993
+	tMax=0.05194990815611094
 	nbBase=0
 	attachedTo='aircraft'
 	nbBaseObsContFrame=0
@@ -89,7 +89,7 @@
 	nbBase=1
 	patchGeometryFile='lifting_line_geometry.dat'
 	patchLoadingFile='loading_blade_0.dat'
-	dtau=3.610891925844287e-05
+	dtau=3.6101395521967295e-05
 /
 
 &CB

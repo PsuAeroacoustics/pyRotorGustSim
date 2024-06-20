@@ -9,7 +9,7 @@ import scipy.optimize as opt
 
 #%%
 
-def compute_aero(geom_params,input_params,observer_params,acs_params,saved_params):
+def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
     
     Nb = geom_params['number_of_blades']
     R = geom_params['radius']
@@ -28,7 +28,7 @@ def compute_aero(geom_params,input_params,observer_params,acs_params,saved_param
     C_T_target = input_params['flight_params']['C_T_target']
     omega = input_params['flight_params']['omega']
     V_c = 0
-    af = asb.Airfoil("naca0009")
+    af = asb.Airfoil(geom_params['airfoil'])
     dpsi = input_params['computational_params']['d_psi']*np.pi/180
     iterations = int(input_params['computational_params']['number_of_revs']*(2*np.pi)/dpsi)
     psi = np.arange(iterations)*dpsi
@@ -113,6 +113,6 @@ def compute_aero(geom_params,input_params,observer_params,acs_params,saved_param
     lifting_line_nodes = np.expand_dims(np.array([ac.rotors[0].R*ac.rotors[0].blades[0].r,np.zeros(N_elements),np.zeros(N_elements)]).T,axis = 0)
     lifting_line_norms = np.expand_dims(np.array([np.zeros(N_elements),np.zeros(N_elements),np.ones(N_elements)]).T,axis = 0)
 
-    saved_params.update({'t':t,'iterations':iterations,'omega':omega,'psi':psi,'h_gust':h,'v_gust':v_gust,'s':s,'th0':th0,'CL':CL,'CD':CD,'aoa_eff':aoa_eff,'dCT':dCT,'dCP':dCP,'loads':loads,'lifting_line_nodes':lifting_line_nodes,'lifting_line_norms':lifting_line_norms})
+    saved_params.update({'t':t,'iterations':iterations,'r':ac.rotors[0].blades[0].r,"th":ac.rotors[0].blades[0].th,'R':R,'e':e,'c':c,'dt':dt,'sos':sos,'N_elements':N_elements,'omega':omega,'psi':psi,'h_gust':h,'v_gust':v_gust,'s':s,'th0':th0,'CL':CL,'CD':CD,'aoa_eff':aoa_eff,'dCT':dCT,'dCP':dCP,'loads':loads,'lifting_line_nodes':lifting_line_nodes,'lifting_line_norms':lifting_line_norms})
 
 
