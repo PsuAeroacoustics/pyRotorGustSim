@@ -85,7 +85,10 @@ def read_results_from_h5(case_dir):
     saved_params ={}
     with h5py.File(os.path.join(case_dir, 'saved_params.h5'), 'r') as f:
         for k,v in f.items():
-            saved_params.update({k:v[()]})
+            if isinstance(v[()], bytes):
+                saved_params.update({k:v[()].decode()})
+            else:
+                saved_params.update({k:v[()]})
     return saved_params
 
 # def process_wopwop(case_path,pressure = True,oaspl = True):

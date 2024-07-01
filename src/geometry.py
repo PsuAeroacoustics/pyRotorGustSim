@@ -40,7 +40,7 @@ class rotor:
         Re = omega*R*r*c/atmos.nu
         M = omega*R*r/atmos.sos
 
-        self.blades = [blade(r,self.c,self.R,th,af,Cl_a=Cl_a,offset = b_iter*2*np.pi/self.Nb,Re = Re,M = M) for b_iter in range(self.Nb)]
+        self.blades = [blade(r,elems,self.c,self.R,th,af,Cl_a=Cl_a,offset = b_iter*2*np.pi/self.Nb,Re = Re,M = M) for b_iter in range(self.Nb)]
 
     def set_loads(self):
         self.CT =np.sum(np.array([np.trapz(b.dCT,x = b.r) for b in self.blades])) 
@@ -48,8 +48,9 @@ class rotor:
 
 
 class blade:
-    def __init__(self,r,c,R,th,af,Cl_a,offset,Re,M):
+    def __init__(self,r,elems,c,R,th,af,Cl_a,offset,Re,M):
         self.r = r
+        self.elems = elems
         self.c = c
         self.R = R
         self.th = th

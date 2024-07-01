@@ -1,5 +1,5 @@
 &caseName
-	globalFolderName='/home/dweitsma/codes/github/DanWeitsman/rotor_gust_interaction/cases/scaled_Mt_sweep/5_Mt_6_Vg_47/acoustics/'
+	globalFolderName='/Users/danielweitsman/codes/github/DanWeitsman/unsteady_BEMT/cases/scaled_Mt_sweep/5_Mt_6_Vg_47/acoustics/'
 	caseNameFile='5_Mt_6_Vg_47.nam'
 /
 

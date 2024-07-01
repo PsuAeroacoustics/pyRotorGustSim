@@ -5,7 +5,7 @@ from bemt import *
 import numpy as np
 import aerosandbox as asb
 import scipy.optimize as opt
-
+import matplotlib.pyplot as plt
 
 #%%
 
@@ -31,20 +31,14 @@ def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,s
     af = asb.Airfoil(geom_params['airfoil'])
     dpsi = input_params['computational_params']['d_psi']*np.pi/180
     iterations = int(input_params['computational_params']['number_of_revs']*(2*np.pi)/dpsi)
+
+    n_revs = np.ceil(omega/(2*np.pi*res_param['df']))
+    iterations = int(n_revs*2*np.pi/dpsi)
     psi = np.arange(iterations)*dpsi
+    
     dt = dpsi/omega
     t = np.arange(iterations)*dt
     
-    gamma_vf = input_params['gust_params']['strength']/R
-    r_vf = input_params['gust_params']['core_size']*c/R
-    n = 2
-    psi_gust = input_params['gust_params']['azimuthal_location']*np.pi/180
-
-    # Indicial response function coefficients and exponents (these are derived from CFD data and given by Leishman)
-    A1 = 0.67
-    b1 = .1753
-    A2 = 0.33
-    b2 = 1.637
 
     # initialize aircraft and rotor object
     atmos = Atmosphere()
@@ -58,46 +52,116 @@ def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,s
     ac.rotors[0].blades[0].set_loads()
     lam_bemt = ac.rotors[0].blades[0].lam
 
-    # gust profile and induced velocity
-    h = np.expand_dims(((psi%(2*np.pi)-psi_gust)%(2*np.pi)),axis = -1)*ac.rotors[0].blades[0].r
-    v_gust = gamma_vf/(2*np.pi)*(h/(r_vf**(2*n)+(h)**(2*n))**(1/n))
-    lam_gust = v_gust/(omega*R)
     
-    # total inflow ratio accounting for the gust contributions
-    lam = lam_bemt+lam_gust
-    U = np.sqrt(lam**2+ac.rotors[0].blades[0].r**2)
-    beta = np.sqrt(1-(U*omega*R/sos)**2)
-    
-    # non-dimensionalized distance in terms of half chords
-    s = omega*R*ac.rotors[0].blades[0].r*np.expand_dims(t,axis = -1)/(c/2)
-    ds = np.diff(s,axis = 0)[0]
+    #%%
 
-    aoa_eff = np.zeros((iterations,N_elements))
-    X_temp = np.zeros((N_elements))
-    Y_temp = np.zeros((N_elements))
+    if input_params['computational_params']['unsteady_loading']:
 
-    for i in range(iterations):
+        gamma_vf = input_params['gust_params']['strength']/R
+        r_vf = input_params['gust_params']['core_size']*c/R
+        n = 2
 
-        X = X_temp*np.exp(-b1*beta[i]**2*ds)+A1*omega*R*(lam_gust[i]-lam_gust[i-1])*np.exp(-b1*beta[i]**2*ds)**(1/2)
-        Y = Y_temp*np.exp(-b2*beta[i]**2*ds)+A2*omega*R*(lam_gust[i]-lam_gust[i-1])*np.exp(-b2*beta[i]**2*ds)**(1/2)
-        dCL = 2*np.pi/(beta[i]*U[i]*omega*R)*(lam_gust[i]*omega*R-X-Y)
-        aoa_eff[i] = dCL/Cl_a
-        X_temp = X
-        Y_temp = Y
+        assert ( 'azimuthal_location' in input_params['gust_params'] or 'gust_end_pnts' in input_params['gust_params'] or 'r_trace' in input_params['gust_params']), "Please specify one of the following in the 'gust_params' entry of the parameter file: 'azimuthal_location', 'gust_end_pnts', 'r_trace'" 
 
-    # new effective inflow angle
-    phi_eff = ac.rotors[0].blades[0].th - aoa_eff
+        if 'azimuthal_location' in input_params['gust_params']:
+            psi_g = input_params['gust_params']['azimuthal_location']*np.pi/180
+            h = ((np.expand_dims(psi,axis = -1)%(2*np.pi)-psi_g)%(2*np.pi))*ac.rotors[0].blades[0].r
 
-    # spanwise Reynold's and Mach numbers
-    Re = np.ones(aoa_eff.shape)*ac.rotors[0].blades[0].Re
-    M = np.ones(aoa_eff.shape)*ac.rotors[0].blades[0].M
+        elif 'gust_end_pnts' in input_params['gust_params']:
+            gust_end_pnts = np.array(input_params['gust_params']['gust_end_pnts'])/R
+            gust_psi_lim = np.round(np.sort([np.arctan2(gust_end_pnts[1],gust_end_pnts[0]),np.arctan2(gust_end_pnts[-1],gust_end_pnts[-2])])/dpsi).astype(int)
+            gust_psi_lim_ind = slice(gust_psi_lim[0],gust_psi_lim[-1])
 
-    # computes sectional airfoil coefficients
-    CL,CD = get_af_coeffs(ac.rotors[0].blades[0].af,aoa_eff*180/np.pi,Re,M)
+            gust_r_lim = np.sort([np.linalg.norm(gust_end_pnts[:2]),np.linalg.norm(gust_end_pnts[-2:])])
+            gust_r_lim_ind = np.abs(np.expand_dims(gust_r_lim,axis = -1)-ac.rotors[0].blades[0].r).argmin(axis = -1)
+            gust_r_lim_ind = slice(gust_r_lim_ind[0],gust_r_lim_ind[-1])
 
-    # sectional axial and normal force coefficients
-    dCz = CL*np.cos(phi_eff)-CD*np.sin(phi_eff)
-    dCx = CL*np.sin(phi_eff)+CD*np.cos(phi_eff)
+            x_b = np.expand_dims(ac.rotors[0].blades[0].r[gust_r_lim_ind],axis = -1)*np.cos(psi)[gust_psi_lim_ind]
+            y_b = np.expand_dims(ac.rotors[0].blades[0].r[gust_r_lim_ind],axis = -1)*np.sin(psi)[gust_psi_lim_ind]
+
+            m = np.diff(gust_end_pnts[1::2])/np.diff(gust_end_pnts[::2])
+            y_g = m*(x_b-gust_end_pnts[0])+gust_end_pnts[1]
+            gust_ind = np.abs(y_b-y_g).argmin(axis = 1)
+
+            x_g = ac.rotors[0].blades[0].r[gust_r_lim_ind]*np.cos(psi)[gust_psi_lim_ind][gust_ind]
+            y_g = ac.rotors[0].blades[0].r[gust_r_lim_ind]*np.sin(psi)[gust_psi_lim_ind][gust_ind]
+
+            psi_g = np.arctan2(y_g,x_g)
+
+            h = np.zeros((iterations,N_elements))
+            h[:,gust_r_lim_ind] = ((np.expand_dims(psi,axis = -1)%(2*np.pi)-psi_g)%(2*np.pi))*ac.rotors[0].blades[0].r[gust_r_lim_ind]
+
+        elif 'r_trace' in input_params['gust_params']:
+            
+            psi_g = np.arctan2(1,input_params['gust_params']['r_trace'])
+            x0 = input_params['gust_params']['r_trace']/np.cos(psi_g)
+            psi_lim = slice(int(np.arctan2(np.sqrt(1-(x0/2-x0)**2),-x0/2)/dpsi),int(np.pi/dpsi))
+            x_g = np.cos(psi[psi_lim][::-1])+x0
+            y_g = np.sin(psi[psi_lim][::-1])
+
+            r_g = np.linalg.norm((x_g,y_g),axis = 0)
+            psi_g = np.arctan2(y_g,x_g)
+
+            r_ind = np.abs(np.expand_dims(ac.rotors[0].blades[0].r,axis = -1)-r_g).argmin(axis = -1)
+            psi_g =psi[np.abs(np.expand_dims(psi,axis = -1) -psi_g[r_ind]).argmin(axis = 0)]
+            x_g = ac.rotors[0].blades[0].r*np.cos(psi_g)
+            y_g = ac.rotors[0].blades[0].r*np.sin(psi_g)
+
+            h = ((np.expand_dims(psi,axis = -1)%(2*np.pi)-psi_g)%(2*np.pi))*ac.rotors[0].blades[0].r
+
+        #$$
+
+        # Indicial response function coefficients and exponents (these are derived from CFD data and given by Leishman)
+        A1 = 0.67
+        b1 = .1753
+        A2 = 0.33
+        b2 = 1.637
+
+        # # gust profile and induced velocity
+        # h = np.expand_dims(((psi%(2*np.pi)-psi_gust)%(2*np.pi)),axis = -1)*ac.rotors[0].blades[0].r
+        v_gust = gamma_vf/(2*np.pi)*(h/(r_vf**(2*n)+(h)**(2*n))**(1/n))
+        # v_gust_zero = np.where(v_gust==0)
+        # v_gust[v_gust_zero] = v_gust[(v_gust_zero[0]+20,v_gust_zero[1])]
+        lam_gust = v_gust/(omega*R)
+
+        # total inflow ratio accounting for the gust contributions
+        lam = lam_bemt+lam_gust
+        U = np.sqrt(lam**2+ac.rotors[0].blades[0].r**2)
+        beta = np.sqrt(1-(U*omega*R/sos)**2)
+        
+        # non-dimensionalized distance in terms of half chords
+        s = omega*R*ac.rotors[0].blades[0].r*np.expand_dims(t,axis = -1)/(c/2)
+        ds = np.diff(s,axis = 0)[0]
+
+        aoa_eff = np.zeros((iterations,N_elements))
+        X_temp = np.zeros((N_elements))
+        Y_temp = np.zeros((N_elements))
+
+        for i in range(iterations):
+
+            X = X_temp*np.exp(-b1*beta[i]**2*ds)+A1*omega*R*(lam_gust[i]-lam_gust[i-1])*np.exp(-b1*beta[i]**2*ds)**(1/2)
+            Y = Y_temp*np.exp(-b2*beta[i]**2*ds)+A2*omega*R*(lam_gust[i]-lam_gust[i-1])*np.exp(-b2*beta[i]**2*ds)**(1/2)
+            dCL = 2*np.pi/(beta[i]*U[i]*omega*R)*(lam_gust[i]*omega*R-X-Y)
+            aoa_eff[i] = dCL/Cl_a
+            X_temp = X
+            Y_temp = Y
+
+        aoa_eff = aoa_eff+np.expand_dims(ac.rotors[0].blades[0].aoa,axis = 0)
+        # new effective inflow angle
+        phi_eff = ac.rotors[0].blades[0].th - aoa_eff
+        # spanwise Reynold's and Mach numbers
+        Re = np.ones(aoa_eff.shape)*ac.rotors[0].blades[0].Re
+        M = np.ones(aoa_eff.shape)*ac.rotors[0].blades[0].M
+        CL,CD = get_af_coeffs(ac.rotors[0].blades[0].af,aoa_eff*180/np.pi,Re,M)
+        # sectional axial and normal force coefficients
+        dCz = CL*np.cos(phi_eff)-CD*np.sin(phi_eff)
+        dCx = CL*np.sin(phi_eff)+CD*np.cos(phi_eff)
+
+
+    else:
+        U = ac.rotors[0].blades[0].U*np.ones((iterations,N_elements))
+        dCz =(ac.rotors[0].blades[0].CL*np.cos(ac.rotors[0].blades[0].phi)-ac.rotors[0].blades[0].CD*np.sin(ac.rotors[0].blades[0].phi))*np.ones((iterations,N_elements))
+        dCx = (ac.rotors[0].blades[0].CL*np.sin(ac.rotors[0].blades[0].phi)+ac.rotors[0].blades[0].CD*np.cos(ac.rotors[0].blades[0].phi))*np.ones((iterations,N_elements))
 
     # sectional thrust and power coefficients
     dCT = 0.5*ac.rotors[0].c/(np.pi*ac.rotors[0].R)*U**2*dCz
@@ -113,6 +177,7 @@ def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,s
     lifting_line_nodes = np.expand_dims(np.array([ac.rotors[0].R*ac.rotors[0].blades[0].r,np.zeros(N_elements),np.zeros(N_elements)]).T,axis = 0)
     lifting_line_norms = np.expand_dims(np.array([np.zeros(N_elements),np.zeros(N_elements),np.ones(N_elements)]).T,axis = 0)
 
-    saved_params.update({'t':t,'iterations':iterations,'r':ac.rotors[0].blades[0].r,"th":ac.rotors[0].blades[0].th,'R':R,'e':e,'c':c,'dt':dt,'sos':sos,'N_elements':N_elements,'omega':omega,'psi':psi,'h_gust':h,'v_gust':v_gust,'s':s,'th0':th0,'CL':CL,'CD':CD,'aoa_eff':aoa_eff,'dCT':dCT,'dCP':dCP,'loads':loads,'lifting_line_nodes':lifting_line_nodes,'lifting_line_norms':lifting_line_norms})
-
-
+    if input_params['computational_params']['unsteady_loading']:
+        saved_params.update({'t':t,'iterations':iterations,'r_elem':ac.rotors[0].blades[0].elems,'r':ac.rotors[0].blades[0].r,"th":ac.rotors[0].blades[0].th,'R':R,'e':e,'c':c,'dpsi':dpsi,'dt':dt,'sos':sos,'N_elements':N_elements,'omega':omega,'psi':psi,'h_gust':h,'v_gust':v_gust,'s':s,'th0':th0,'CL':CL,'CD':CD,'aoa_eff':aoa_eff,'dCT':dCT,'dCP':dCP,'loads':loads,'lifting_line_nodes':lifting_line_nodes,'lifting_line_norms':lifting_line_norms})
+    else:
+        saved_params.update({'t':t,'iterations':iterations,'r_elem':ac.rotors[0].blades[0].elems,'r':ac.rotors[0].blades[0].r,"th":ac.rotors[0].blades[0].th,'R':R,'e':e,'c':c,'dpsi':dpsi,'dt':dt,'sos':sos,'N_elements':N_elements,'omega':omega,'psi':psi,'th0':th0,'CL':ac.rotors[0].blades[0].CL,'CD':ac.rotors[0].blades[0].CD,'aoa_eff':ac.rotors[0].blades[0].aoa,'dCT':dCT,'dCP':dCP,'loads':loads,'lifting_line_nodes':lifting_line_nodes,'lifting_line_norms':lifting_line_norms})

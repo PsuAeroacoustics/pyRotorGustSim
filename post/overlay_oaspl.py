@@ -49,8 +49,8 @@ theta = np.round(np.arctan2(acs_data[cases[0]]['geometry_values'][:,0,1],acs_dat
 
 #%%
 
-M = np.array([saved_params[case]['v_gust'].max()/340 for case in cases])
-# M = np.array([saved_params[case]['omega']*.19685/340 for case in cases])
+# M = np.array([saved_params[case]['v_gust'].max()/340 for case in cases])
+M = np.array([saved_params[case]['omega']*.19685/340 for case in cases])
 plot_ind = M.argsort()
 leg_labs = [f'$\\theta = {theta[x]}^\circ$' for x in np.arange(oaspl.shape[-1])][::-1]
 
@@ -59,20 +59,21 @@ for mic_iter in range(oaspl.shape[-1]):
     fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
     plt.subplots_adjust(left = .2,bottom = .15)
     ax.plot(M[plot_ind],oaspl[plot_ind,mic_iter],marker = 'o')
-    ax.set_xlabel('$M_g$')
+    ax.set_xlabel('$M_t$')
     ax.set_ylabel('OASPL, dB')
     ax.set_ylim([70,110])
     ax.set_title(f'$\\theta = {theta[mic_iter]}^\circ$')
     ax.grid()
-    plt.savefig(os.path.join(cases_directory,f'oaspl_vs_Mg_{mic_iter}.png'),format = 'png')
+    plt.savefig(os.path.join(cases_directory,f'oaspl_vs_M_{mic_iter}.png'),format = 'png')
     # ax.legend(['Thickness','Loading','Total'])
 
 fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
 plt.subplots_adjust(left = .2,bottom = .15)
 ax.plot(M[plot_ind],oaspl[plot_ind,:][:,::-1],marker = 'o')
-ax.set_xlabel('$M_g$')
+ax.plot(M[plot_ind],M[plot_ind]**2,marker = 'o')
+ax.set_xlabel('$M_t$')
 ax.set_ylabel('OASPL, dB')
 ax.set_ylim([70,120])
 ax.legend(labels =leg_labs)
 ax.grid()
-plt.savefig(os.path.join(cases_directory,f'oaspl_vs_Mg.png'),format = 'png')
+plt.savefig(os.path.join(cases_directory,f'oaspl_vs_M.png'),format = 'png')

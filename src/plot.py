@@ -24,20 +24,31 @@ def plot_p_tseries(geom_params,input_params,res_param,observer_params,acs_params
 
     theta = np.round(np.arctan2(pred_data['geometry_values'][:,0,1],pred_data['geometry_values'][:,0,0])*180/np.pi)%(360)
     dt = pred_data['function_values'][0,1,0]-pred_data['function_values'][0,0,0]
-    psi = pred_data['function_values'][0,:,0]/(pred_data['function_values'][0,-1,0]/input_params['computational_params']['number_of_revs'])*360-360
+    psi = (pred_data['function_values'][0,:,0]/((saved_params['omega']/(2*np.pi))**-1)*360)%360
 
     for mic_iter in range(len(pred_data['function_values'])):
         fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
-        plt.subplots_adjust(left = .2,bottom = .15)
-        ax.plot(psi,pred_data['function_values'][mic_iter,:,-1])
+        plt.subplots_adjust(left = .22,bottom = .15)
+
+        if acs_params['thicknessNoiseFlag'] or acs_params['totalNoiseFlag']:
+            ax.plot(pred_data['function_values'][mic_iter,:,0],pred_data['function_values'][mic_iter,:,1])
+            ax.plot(pred_data['function_values'][mic_iter,:,0],pred_data['function_values'][mic_iter,:,2])
+            ax.plot(pred_data['function_values'][mic_iter,:,0],pred_data['function_values'][mic_iter,:,-1])
+            ax.legend(['Thickness','Loading','Total'])
+        else:
+            ax.plot(pred_data['function_values'][mic_iter,:,0],pred_data['function_values'][mic_iter,:,-1])
+
+
         ax.set_title(f'$\\theta = {theta[mic_iter]}^\circ$')
         ax.set_ylabel('Pressure [Pa]')
-        ax.set_xlabel('Blade Azimuth [deg]')
+        ax.set_xlabel('Time [s]')
         # ax.axis([270,320,-120,60])
         min_ind = pred_data['function_values'][mic_iter,:,-1].argmin()
-        ax.set_xlim([np.round(psi[min_ind]-40/2),np.round(psi[min_ind]+40/2)])
-        ax.set_ylim([-120,60])
-        ax.set_yticks(np.arange(10)*20-120)
+        # ax.set_xlim([0,360])
+        ax.set_xlim([pred_data['function_values'][mic_iter,min_ind,0]-0.05*(saved_params['omega']/(2*np.pi))**-1,pred_data['function_values'][mic_iter,min_ind,0]+0.05*(saved_params['omega']/(2*np.pi))**-1])
+        # ax.set_yticks(np.arange(10)*20-120)
+        # ax.set_ylim([1.1*pred_data['function_values'][:,:,-1].min(),1.1*pred_data['function_values'][:,:,-1].max()])
+        ax.set_ylim([-25,20])
         ax.grid()
         plt.savefig(os.path.join(saved_params['case_dir'],f'tseries_{mic_iter}.png'),format = 'png')
 
@@ -57,20 +68,40 @@ def plot_gust_profile(geom_params,input_params,res_param,observer_params,acs_par
     ax.grid()
     plt.savefig(os.path.join(saved_params['case_dir'],f'gust_profile.png'),format = 'png')
 
+def plot_load_tseries(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
+    fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
+    plt.subplots_adjust(left = .15,bottom = .15)
+    ax.plot((saved_params['psi'][-int(2*np.pi/saved_params['dpsi']):])%(2*np.pi)*180/np.pi,saved_params['loads'][-int(2*np.pi/saved_params['dpsi']):,int(0.75*saved_params['N_elements']),-1])
+    ax.set_ylabel('$ F_z \ [N]$')
+    ax.set_xlabel('$ Azimuthal Angle \ [deg]$')
+    ax.set_xlim([0,360])
+    ax.grid()
+    plt.savefig(os.path.join(saved_params['case_dir'],f'Fz_tseries.png'),format = 'png')
+
+    fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
+    plt.subplots_adjust(left = .15,bottom = .15)
+    ax.plot(saved_params['psi'][-int(2*np.pi/saved_params['dpsi']):]%(2*np.pi)*180/np.pi,np.gradient(saved_params['loads'][-int(2*np.pi/saved_params['dpsi']):,int(0.75*saved_params['N_elements']),-1],axis = 0))
+    ax.set_ylabel('$ dF_z \ [N/deg]$')
+    ax.set_xlabel('$ Azimuthal Angle \ [deg]$')
+    ax.set_xlim([0,360])
+    ax.set_ylim([-12,12])
+    ax.grid()
+    plt.savefig(os.path.join(saved_params['case_dir'],f'dFz_tseries.png'),format = 'png')
 
 def plot_load_dist(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
     
     cmap = plt.cm.Spectral.reversed()
     
     fig,ax = plt.subplots(subplot_kw=dict(projection = 'polar'))
-    lim = [np.min(saved_params['loads']),np.max(saved_params['loads'])]
+    lim = [np.min(saved_params['loads'][-int(2*np.pi/saved_params['dpsi']):,:,-1]),np.max(saved_params['loads'][-int(2*np.pi/saved_params['dpsi']):,:,-1])]
     levels = np.linspace(lim[0],lim[1],50)
     cbar_ticks = np.round(levels)[::4]
     # cbar_ticks = np.round(np.arange(50)*lim/50-lim)[::4]
-    dist = ax.contourf(saved_params['psi'],saved_params['r'],saved_params['loads'][:,:,-1].T,levels = levels,cmap = cmap,norm = mcolors.CenteredNorm())
+    dist = ax.contourf(saved_params['psi'][:int(2*np.pi/saved_params['dpsi'])],saved_params['r'],saved_params['loads'][-int(2*np.pi/saved_params['dpsi']):,:,-1].T,levels = levels,cmap = cmap,norm = mcolors.CenteredNorm())
     cbar = fig.colorbar(dist,pad = .1)
     cbar.ax.set_ylabel('$ F_z \ [N]$')
     cbar.ax.set_yticks(cbar_ticks)
+    ax.set_rlim([0,saved_params['r'][-1]])
     plt.savefig(os.path.join(saved_params['case_dir'],'Fz.png'),format = 'png')
 
     d_loads = np.gradient(saved_params['loads'][:,:,-1],axis = 0)
@@ -83,6 +114,7 @@ def plot_load_dist(geom_params,input_params,res_param,observer_params,acs_params
     cbar = fig.colorbar(dist,pad = .1)
     cbar.ax.set_ylabel('$\partial F_z /\partial \psi \ [N/deg]$')
     cbar.ax.set_yticks(cbar_ticks)
+    ax.set_rlim([0,saved_params['r'][-1]])
     plt.savefig(os.path.join(saved_params['case_dir'],'dFz.png'),format = 'png')
 
 def plot_filt_load_dist(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
@@ -98,6 +130,7 @@ def plot_filt_load_dist(geom_params,input_params,res_param,observer_params,acs_p
     cbar = fig.colorbar(dist,pad = .1)
     cbar.ax.set_ylabel('$ F_z \ [N]$')
     cbar.ax.set_yticks(cbar_ticks)
+    ax.set_rlim([0,saved_params['r'][-1]])
     plt.savefig(os.path.join(saved_params['case_dir'],'Fz_filt.png'),format = 'png')
 
     d_loads = np.gradient(saved_params['filt_loads'][:,:,-1],axis = 0)
@@ -110,6 +143,7 @@ def plot_filt_load_dist(geom_params,input_params,res_param,observer_params,acs_p
     cbar = fig.colorbar(dist,pad = .1)
     cbar.ax.set_ylabel('$\partial F_z /\partial \psi \ [N/deg]$')
     cbar.ax.set_yticks(cbar_ticks)
+    ax.set_rlim([0,saved_params['r'][-1]])
     plt.savefig(os.path.join(saved_params['case_dir'],'dFz_filt.png'),format = 'png')
 
 def plot_res_params(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
@@ -139,6 +173,14 @@ def plot_res_params(geom_params,input_params,res_param,observer_params,acs_param
 
         plt.savefig(os.path.join(saved_params['case_dir'],'res_geom.png'), dpi=500, bbox_inches="tight", pad_inches=0.0)
 
+    fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
+    plt.subplots_adjust(wspace = 0.45,bottom = 0.15)
+    ax.scatter(saved_params['r'][saved_params['filt_ind']],saved_params['N'][saved_params['filt_ind']].squeeze())
+    ax.set_ylabel('Resonators Per Blade Element, N')
+    ax.set_xlabel('Radius, r/R')
+    ax.set_ylim(bottom = 0)
+    plt.savefig(os.path.join(saved_params['case_dir'],'res_count.png'), dpi=500, bbox_inches="tight", pad_inches=0.0)
+
 def plot_res_resp(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
 
     r_ind = int(.75*saved_params['Z'].shape[-1])
@@ -147,7 +189,7 @@ def plot_res_resp(geom_params,input_params,res_param,observer_params,acs_params,
     ax[0].tick_params(axis = 'x', labelsize=0)
     ax[0].plot(saved_params['f'],np.real(saved_params['Z'][:,r_ind]))
     ax[0].set_ylabel(r'$Resistance, \ \overline{\theta}$')
-    ax[0].set_xlim([500,saved_params['f'][-1]])
+    ax[0].set_xlim([500,res_param['f_max']+1e3])
     ax[0].set_ylim([0,10])
     ax[0].grid()
 
@@ -156,7 +198,7 @@ def plot_res_resp(geom_params,input_params,res_param,observer_params,acs_params,
     ax[1].set_xlim([500,saved_params['f'][-1]])
     ax[-1].set_xlabel('Frequency [Hz]')
     ax[-1].grid()
-    ax[-1].set_xlim([500,saved_params['f'][-1]])
+    ax[-1].set_xlim([0,res_param['f_max']+1e3])
     ax[-1].set_ylim([-5, 5])
     plt.savefig(os.path.join(saved_params['case_dir'],'Z.png'),format = 'png')
 
@@ -166,22 +208,21 @@ def plot_res_resp(geom_params,input_params,res_param,observer_params,acs_params,
     ax[0].plot(saved_params['f'],abs(R))
     ax[0].set_ylabel(r'$Reflection, \ |\mathit{R}|$')
     ax[0].grid()
-    ax[0].set_xlim([500,saved_params['f'][-1]])
+    ax[0].set_xlim([0,res_param['f_max']+1e3])
     ax[0].set_ylim([0, 1])
 
     ax[-1].plot(saved_params['f'],np.unwrap(np.angle(R)))
     ax[-1].set_ylabel('$Phase, \ \phi \ [rad]$')
     ax[-1].set_xlabel('Frequency [Hz]')
     ax[-1].grid()
-    ax[-1].set_xlim([500,saved_params['f'][-1]])
+    ax[-1].set_xlim([0,res_param['f_max']+1e3])
     plt.savefig(os.path.join(saved_params['case_dir'],'R.png'),format = 'png')
 
     alpha = 1 - abs(R)**2
     fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
-    ax.tick_params(axis = 'x', labelsize=0)
     ax.plot(saved_params['f'],alpha)
     ax.set_ylabel(r'$Absorption, \alpha$')
     ax.grid()
-    ax.set_xlim([500,saved_params['f'][-1]])
+    ax.set_xlim([0,res_param['f_max']+1e3])
     ax.set_ylim([0, 1])
     plt.savefig(os.path.join(saved_params['case_dir'],'alpha.png'),format = 'png')

@@ -1,0 +1,5 @@
+&caseName
+	globalFolderName='/Users/danielweitsman/codes/github/DanWeitsman/unsteady_BEMT/cases/scaled_mdof_geom_opt/mdof_geom_opt/acoustics/'
+	caseNameFile='mdof_geom_opt.nam'
+/
+

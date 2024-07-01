@@ -6,6 +6,7 @@ from shutil import rmtree
 from help_funcs import *
 from compute_aero import *
 from filter_loads import *
+from build_blade_geom import *
 from wopwop_input_configure import *
 from plot import *
 
@@ -78,14 +79,13 @@ def main():
     args = parser.parse_args()
 
     geom_params,input_params,res_param,observer_params,acs_params = read_case_files(args)
-
-    saved_params = {}
-
     case_dir = os.path.join(os.getcwd(),input_params['case_name'])
     acs_dir = os.path.join(case_dir,'acoustics')
-    saved_params = {**saved_params,**{'case_dir':case_dir,'acs_dir':acs_dir}}
 
     if args.aero:
+
+        saved_params = {}
+        saved_params.update({'case_dir':case_dir,'acs_dir':acs_dir})
 
         if os.path.exists(case_dir):
             rmtree(case_dir)
@@ -93,19 +93,27 @@ def main():
         os.mkdir(acs_dir)
 
         compute_aero(geom_params,input_params,res_param,observer_params,acs_params,saved_params)
+        
+        if acs_params['thicknessNoiseFlag'] or acs_params['totalNoiseFlag']:
+            build_blade_geom(geom_params,input_params,res_param,observer_params,acs_params,saved_params)
+
         wopwop_input_configure(geom_params,input_params,res_param,observer_params,acs_params,saved_params)
 
-        if args.filt:
-            filter_loads(geom_params,input_params,res_param,observer_params,acs_params,saved_params,opt = args.opt)
-            if args.plot:
-                list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_filt_load_dist,plot_res_resp,plot_res_params]))
+        if args.filt or args.opt:
+            if args.aero:
+                filter_loads(geom_params,input_params,res_param,observer_params,acs_params,saved_params,opt = args.opt)
+
+    else:
+         saved_params  = read_results_from_h5(case_dir)
 
     if args.acs:
         run_wopwop(cases = f"{input_params['case_name']}{os.sep}cases.nam",parallel = False)
         process_wopwop(cases_directory=case_dir,cases = 'cases.nam')
     
     if args.plot:
-         list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_p_tseries,plot_gust_profile,plot_load_dist]))
+         if args.filt or args.opt:
+                list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_filt_load_dist,plot_res_resp,plot_res_params]))
+         list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_p_tseries,plot_load_tseries,plot_load_dist]))
 
     write_results_to_h5(saved_params)
     

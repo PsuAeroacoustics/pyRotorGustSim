@@ -5,19 +5,22 @@ import resonator as res
 
 #%%
 
-def get_sample_info(x,N_res,A_r,A_s):
+def get_sample_info(x,N_res,A_r,A_s,a_min,L_min):
 
     def get_res_geom(x):
 
         if N_res==1:
             B = np.array([1])
+        
         else:
             # number of unique resonators per sample
             t = np.linspace(0,1, N_res)
             B = np.insert(x[2:],len(x[2:]),1)@np.array(((1-t)**2,2*t*(1-t),t**2))
 
-        a = x[0]*B
-        L = x[1]*B
+        a = (x[0]-a_min)*B+a_min
+        L = (x[1]-L_min)*B+L_min
+        # a = x[0]*B
+        # L = x[1]*B
 
         N = np.floor(A_r*A_s/np.sum(np.pi*a**2,axis = 0))
 
@@ -137,28 +140,34 @@ def smeared_Z(f,N,a,L,N_res,facesheet,t_fs,phi_fs,N_fs,A_r,A_s,M,SPL):
 
     return Z_tot, alpha
 
-def get_filt_resp(Z_tot):
+def get_filt_resp(Z_tot,odd = True):
 
     filt_resp_shape = Z_tot.shape
     # reflection coefficient
     R = (Z_tot-1)/(Z_tot+1)
-    # complex admittance of the resonators
-    filt_resp = np.ones((filt_resp_shape[0]*2,filt_resp_shape[-1]),dtype = complex)
-    # mirrors reflection coefficient to account for the negative symmetry in linear spectrum
-    filt_resp[1:int(filt_resp_shape[0])] = R[:-1]
-    filt_resp[int(filt_resp_shape[0])+1:]= np.conj(R[:-1])[::-1]
+    R[Z_tot==1] = 1+1j*0
+    
+    if odd:
+        filt_resp = np.ones((filt_resp_shape[0]*2+1,filt_resp_shape[-1]),dtype = complex)
+        filt_resp[1:int(filt_resp_shape[0])+1] = R
+        filt_resp[int(filt_resp_shape[0])+1:] = np.conj(R)[::-1]
+
+    else:
+        # complex admittance of the resonators
+        filt_resp = np.ones((filt_resp_shape[0]*2,filt_resp_shape[-1]),dtype = complex)
+        filt_resp[1:int(filt_resp_shape[0])] = R[:-1]
+        filt_resp[int(filt_resp_shape[0])+1:] = np.conj(R[:-1])[::-1]
 
     return filt_resp
 
 def apply_filt(loads,filt_resp):
 
     Xm = fft(loads,axis = 0)
-    Xm_filt = np.zeros(Xm.shape,dtype=complex)
+    # Xm_filt = np.zeros(Xm.shape,dtype=complex)
     # Xm_filt = (Xm.T*filt_resp).T
     Xm_filt = (Xm*np.expand_dims(filt_resp,axis = -1))
     # performs an ifft to convert filtered loads back to the time domain
     xn_filt = np.real(ifft(Xm_filt,axis =0))
-
     return xn_filt
 
 def get_opt_bounds(x,r_min,r_max,L_min,L_max):

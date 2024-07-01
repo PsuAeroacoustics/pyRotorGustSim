@@ -1,5 +1,5 @@
 &caseName
-	globalFolderName='/home/dweitsma/codes/github/DanWeitsman/rotor_gust_interaction/cases/baseline/baseline/acoustics/'
+	globalFolderName='/Users/danielweitsman/codes/github/DanWeitsman/unsteady_BEMT/cases/baseline/baseline/acoustics/'
 	caseNameFile='baseline.nam'
 /
 
