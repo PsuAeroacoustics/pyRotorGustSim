@@ -9,7 +9,7 @@ class EnvironmentIn():
     def __init__(self,nbSourceContainers =1,nbObserverContainers = 1, pressureFolderName='pressure/',SPLFolderName= 'spl/',sigmaFolderName= 'sigma/',debugLevel= 1,ASCIIOutputFlag= False,OASPLdBFlag= False,OASPLdBAFlag= False,spectrumFlag= False,
                  SPLdBFlag= False,SPLdBAFlag= False,pressureGradient1AFlag= False, acousticPressureFlag= True,thicknessNoiseFlag= False,loadingNoiseFlag= True,totalNoiseFlag= False,
                  sigmaFlag= False,loadingNoiseSigmaFlag= True,thicknessNoiseSigmaFlag= True,totalNoiseSigmaFlag= True,normalSigmaFlag= True,machSigmaFlag= True,observerSigmaFlag= True,velocitySigmaFlag= True,
-                 accelerationSigmaFlag= True,densitySigmaFlag= True,momentumSigmaFlag= True,pressureSigmaFlag= True,loadingSigmaFlag= True,areaSigmaFlag= True,MdotrSigmaFlag= True,iblankSigmaFlag = True):
+                 accelerationSigmaFlag= True,densitySigmaFlag= True,momentumSigmaFlag= True,pressureSigmaFlag= True,loadingSigmaFlag= True,areaSigmaFlag= True,MdotrSigmaFlag= True,iblankSigmaFlag = True,**kwargs):
         self.nbSourceContainers = nbSourceContainers
         self.nbObserverContainers = nbObserverContainers
         self.pressureFolderName = pressureFolderName
@@ -58,8 +58,8 @@ class EnvironmentConstants():
 
 class ObserverIn():
     def __init__(self,nt,Title = 'observer',tMin = None,tMax = None,nbBase = 0,attachedTo = None,nbBaseObsContFrame = 0,nbBaseLocalFrame = 0,fileName = None,
-                highPassFrequency = None,lowPassFrequency= None,xLoc = None,yLoc = None ,zLoc= None,nbx= None,nby= None,nbz= None,xMin= None,xMax= None,yMin= None,yMax= None,zMin= None,zMax= None,
-                radius = None, nbTheta = None,nbPsi = None,thetaMin = None,thetaMax = None,psiMin = None,psiMax = None,indexSwap = False):
+                nbHarmonics = None, highPassFrequency = None,lowPassFrequency= None,xLoc = None,yLoc = None ,zLoc= None,nbx= None,nby= None,nbz= None,xMin= None,xMax= None,yMin= None,yMax= None,zMin= None,zMax= None,
+                radius = None, nbTheta = None,nbPsi = None,thetaMin = None,thetaMax = None,psiMin = None,psiMax = None,indexSwap = False,**kwargs):
         
         self.nt = nt
         self.Title = Title
@@ -77,7 +77,9 @@ class ObserverIn():
             self.highPassFrequency = highPassFrequency
         if lowPassFrequency is not None:
             self.lowPassFrequency = lowPassFrequency
-        
+        if nbHarmonics is not None:
+            self.nbHarmonics = nbHarmonics
+
         if xLoc is not None:
             self.xLoc = xLoc
             self.yLoc = yLoc
@@ -94,7 +96,7 @@ class ObserverIn():
             self.zMin = zMin
             self.zMax = zMax
 
-        if radius is not None:
+        if nbTheta is not None:
             self.radius = radius
             self.nbTheta = nbTheta
             self.nbPsi = nbPsi

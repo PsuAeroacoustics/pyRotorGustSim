@@ -1,0 +1,5 @@
+&caseName
+	globalFolderName='/home/dweitsma/codes/github/DanWeitsman/rotor_gust_interaction/cases/baseline/mdof_geom_sgrid/acoustics/'
+	caseNameFile='mdof_geom_sgrid.nam'
+/
+

@@ -107,13 +107,24 @@ def main():
          saved_params  = read_results_from_h5(case_dir)
 
     if args.acs:
-        run_wopwop(cases = f"{input_params['case_name']}{os.sep}cases.nam",parallel = False)
+        cpu_count = os.cpu_count()
+        if ('nbTheta' in observer_params and (observer_params['nbTheta'] >= int(cpu_count/2) or (observer_params['nbPsi'] >= int(cpu_count/2)))) or ('nbx' in observer_params and (observer_params['nbx'] >= int(cpu_count/2) or (observer_params['nby'] >= int(cpu_count/2)) or (observer_params['nbz'] >= int(cpu_count/2)))):
+            parallel = True
+        else:
+            parallel = False 
+
+        run_wopwop(cases = f"{input_params['case_name']}{os.sep}cases.nam",parallel = parallel)
         process_wopwop(cases_directory=case_dir,cases = 'cases.nam')
-    
+        
+        if args.opt:
+            acs_data = import_results_from_wopwop(cases_directory=saved_params['acs_dir'])
+            oaspl = 10*np.log10(np.mean(acs_data['function_values'][:,:,:,-1]**2,axis = -2)/20e-6**2)
+            saved_params.update({'oaspl':oaspl,'function_values':acs_data['function_values'],'geometry_values':acs_data['geometry_values']})
+
     if args.plot:
          if args.filt or args.opt:
                 list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_filt_load_dist,plot_res_resp,plot_res_params]))
-         list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_p_tseries,plot_load_tseries,plot_load_dist]))
+         list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_p_tseries,plot_load_tseries,plot_load_dist,plot_gust_profile]))
 
     write_results_to_h5(saved_params)
     

@@ -1,0 +1,5 @@
+&caseName
+	globalFolderName='/home/dweitsma/codes/github/DanWeitsman/rotor_gust_interaction/cases/baseline/sdof_dist_opt/acoustics/'
+	caseNameFile='sdof_dist_opt.nam'
+/
+

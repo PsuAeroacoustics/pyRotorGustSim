@@ -29,16 +29,18 @@ def filter_loads(geom_params,input_params,res_param,observer_params,acs_params,s
         res_param['x'] = x
         apply_res(res_param,saved_params)
 
-        if not np.all(saved_params['N'] == 0):
+        V_res = np.sum(np.sum(np.pi*saved_params['a']**2*saved_params['L'])*saved_params['N'][saved_params['filt_ind']])
+
+        if not np.all(saved_params['N'] == 0) and (V_res/V0 <= 1):
             for b_iter in range(geom_params['number_of_blades']):
                 aperiodic_compact_loading_write(os.path.join(saved_params['acs_dir'],f'loading_blade_{b_iter}.dat'),t = saved_params['t'], loads = saved_params['filt_loads'],ascii = False)
             oaspl_filtered = get_oaspl()
 
-            constraint = mu/2*np.max((0,-(1-np.sum(np.sum(np.pi*saved_params['a']**2*saved_params['L'])*saved_params['N'][saved_params['filt_ind']])/V0)))**2+mu/2*np.max((0,-(0.25-saved_params['x'][0]/saved_params['x'][1])))**2
+            constraint = mu/2*np.max((0,-(1-V_res/V0)))**2+mu/2*np.max((0,-(0.25-saved_params['x'][0]/saved_params['x'][1])))**2
             residual = np.mean(10**(oaspl_filtered/10)/(10**(oaspl_baseline/10)))+constraint
 
             print(f'Inputs: {x} ')
-            print(f"Volume fraction: {np.sum(np.sum(np.pi*saved_params['a']**2*saved_params['L'])*saved_params['N'][saved_params['filt_ind']])/V0}")
+            print(f"Volume fraction: {V_res/V0}")
             print(f'Delta OASPL: {np.mean(oaspl_baseline-oaspl_filtered)} ')
             print(f'Residual: {residual} ')
 
@@ -102,16 +104,18 @@ def filter_loads(geom_params,input_params,res_param,observer_params,acs_params,s
 
     mu = 100
 
-    r_min, r_max, L_min, L_max = np.min((.5e-3,res_param['r_min'])),np.min((saved_params['sos']/(2*np.pi*res_param['f_max']),res_param['r_max'])),np.max((saved_params['sos']/(f[-1]*4),res_param['L_min'])),np.max((saved_params['sos']/(150*4),res_param['L_max']))
+    r_min, r_max, L_min, L_max = np.max((.25e-3,res_param['r_min'])),np.min((saved_params['sos']/(2*np.pi*res_param['f_max']),res_param['r_max'])),np.min((saved_params['sos']/(res_param['f_max']*4),res_param['L_min'])),np.max((saved_params['sos']/(150*4),res_param['L_max']))
 
     if opt:
+
+        oaspl_baseline = get_oaspl()
+        saved_params.update({'oaspl_baseline':oaspl_baseline})
+
 
         x_hist = []
         f_hist = []
         c_hist = []
 
-        oaspl_baseline = get_oaspl()
-        
         bounds = get_opt_bounds(res_param['x'],r_min, r_max, L_min, L_max)
         opt_out = differential_evolution(opt_res,x0 = res_param['x'],bounds = bounds, polish=False,maxiter = int(res_param['maxiter']/(15*len(res_param['x']))),args = (res_param,geom_params,saved_params))
         res_param['x'] = opt_out.x
@@ -121,4 +125,5 @@ def filter_loads(geom_params,input_params,res_param,observer_params,acs_params,s
     apply_res(res_param,saved_params)
     for b_iter in range(geom_params['number_of_blades']):
         aperiodic_compact_loading_write(os.path.join(saved_params['acs_dir'],f'loading_blade_{b_iter}.dat'),t = saved_params['t'], loads = saved_params['filt_loads'],ascii = False)
-
+    
+    

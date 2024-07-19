@@ -10,15 +10,15 @@ def get_sample_info(x,N_res,A_r,A_s,a_min,L_min):
     def get_res_geom(x):
 
         if N_res==1:
-            B = np.array([1])
-        
+            a = np.array([x[0]])
+            L = np.array([(x[1]-L_min)+L_min])
         else:
             # number of unique resonators per sample
             t = np.linspace(0,1, N_res)
             B = np.insert(x[2:],len(x[2:]),1)@np.array(((1-t)**2,2*t*(1-t),t**2))
-
-        a = (x[0]-a_min)*B+a_min
-        L = (x[1]-L_min)*B+L_min
+        # a = (x[0]-a_min)*B+a_min
+            a = x[0]*np.ones(len(B))
+            L = (x[1]-L_min)*B+L_min
         # a = x[0]*B
         # L = x[1]*B
 
@@ -40,7 +40,7 @@ def get_sample_info(x,N_res,A_r,A_s,a_min,L_min):
 
         return filt_ind
 
-    if len(x)==4:
+    if len(x)<=4:
         N,a,L = get_res_geom(x)
 
     elif len(x)==5:
@@ -96,7 +96,10 @@ def smeared_Z(f,N,a,L,N_res,facesheet,t_fs,phi_fs,N_fs,A_r,A_s,M,SPL):
     #     Z_tot = np.array([(N[i]*np.pi*a**2/A_s[i]*Z**-1)**-1 for i in range(elements)])
 
     # else:
-
+    # if N_res ==1:
+    #     Z = np.array(init_res(f,a_n = a,L_n = L/2,a_c = a,L_c = L/2).Z)
+    #     Z_tot = ((np.expand_dims(N*np.pi*a**2/A_s,axis = -1)*Z**-1)**-1).T
+    # else:
     Z = np.array([init_res(f,a_n = a[i],L_n = L[i]/2,a_c = a[i],L_c = L[i]/2).Z for i in range(N_res)]).T
     Z_tot = (((N*np.pi*np.expand_dims(a,axis = -1)**2/A_s).T@Z.T**-1)**-1).T
 
@@ -171,7 +174,9 @@ def apply_filt(loads,filt_resp):
     return xn_filt
 
 def get_opt_bounds(x,r_min,r_max,L_min,L_max):
-    if len(x) == 4:
+    if len(x) < 4:
+        bounds = Bounds(lb = (r_min,L_min), ub = (r_max,L_max),keep_feasible=True)
+    elif len(x) == 4:
         bounds = Bounds(lb = (r_min,L_min,0,0), ub = (r_max,L_max,1,1),keep_feasible=True)
     elif len(x) == 5:
         bounds = Bounds(lb = (r_min,L_min,-1,-1,-1), ub = (r_max,L_max,1,1,1),keep_feasible=True)

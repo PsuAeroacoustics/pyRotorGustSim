@@ -51,6 +51,7 @@ def plot_p_tseries(geom_params,input_params,res_param,observer_params,acs_params
         ax.set_ylim([-25,20])
         ax.grid()
         plt.savefig(os.path.join(saved_params['case_dir'],f'tseries_{mic_iter}.png'),format = 'png')
+        plt.close()
 
 def plot_gust_profile(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
     
@@ -67,6 +68,7 @@ def plot_gust_profile(geom_params,input_params,res_param,observer_params,acs_par
     ax.set_ylim(bottom = 0)
     ax.grid()
     plt.savefig(os.path.join(saved_params['case_dir'],f'gust_profile.png'),format = 'png')
+    plt.close()
 
 def plot_load_tseries(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
     fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
@@ -77,6 +79,7 @@ def plot_load_tseries(geom_params,input_params,res_param,observer_params,acs_par
     ax.set_xlim([0,360])
     ax.grid()
     plt.savefig(os.path.join(saved_params['case_dir'],f'Fz_tseries.png'),format = 'png')
+    plt.close()
 
     fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
     plt.subplots_adjust(left = .15,bottom = .15)
@@ -87,6 +90,7 @@ def plot_load_tseries(geom_params,input_params,res_param,observer_params,acs_par
     ax.set_ylim([-12,12])
     ax.grid()
     plt.savefig(os.path.join(saved_params['case_dir'],f'dFz_tseries.png'),format = 'png')
+    plt.close()
 
 def plot_load_dist(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
     
@@ -103,6 +107,7 @@ def plot_load_dist(geom_params,input_params,res_param,observer_params,acs_params
     cbar.ax.set_yticks(cbar_ticks)
     ax.set_rlim([0,saved_params['r'][-1]])
     plt.savefig(os.path.join(saved_params['case_dir'],'Fz.png'),format = 'png')
+    plt.close()
 
     d_loads = np.gradient(saved_params['loads'][:,:,-1],axis = 0)
     fig,ax = plt.subplots(subplot_kw=dict(projection = 'polar'))
@@ -116,6 +121,7 @@ def plot_load_dist(geom_params,input_params,res_param,observer_params,acs_params
     cbar.ax.set_yticks(cbar_ticks)
     ax.set_rlim([0,saved_params['r'][-1]])
     plt.savefig(os.path.join(saved_params['case_dir'],'dFz.png'),format = 'png')
+    plt.close()
 
 def plot_filt_load_dist(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
     
@@ -132,6 +138,7 @@ def plot_filt_load_dist(geom_params,input_params,res_param,observer_params,acs_p
     cbar.ax.set_yticks(cbar_ticks)
     ax.set_rlim([0,saved_params['r'][-1]])
     plt.savefig(os.path.join(saved_params['case_dir'],'Fz_filt.png'),format = 'png')
+    plt.close()
 
     d_loads = np.gradient(saved_params['filt_loads'][:,:,-1],axis = 0)
     fig,ax = plt.subplots(subplot_kw=dict(projection = 'polar'))
@@ -145,6 +152,7 @@ def plot_filt_load_dist(geom_params,input_params,res_param,observer_params,acs_p
     cbar.ax.set_yticks(cbar_ticks)
     ax.set_rlim([0,saved_params['r'][-1]])
     plt.savefig(os.path.join(saved_params['case_dir'],'dFz_filt.png'),format = 'png')
+    plt.close()
 
 def plot_res_params(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
 
@@ -152,7 +160,8 @@ def plot_res_params(geom_params,input_params,res_param,observer_params,acs_param
     ax.scatter(saved_params['r'],saved_params['filt_ind'])
     ax.set_xlabel('r/R')
     plt.savefig(os.path.join(saved_params['case_dir'],'res_dist.png'), dpi=500, bbox_inches="tight", pad_inches=0.0)
-    
+    plt.close()
+
     if len(saved_params['a'])>1:
 
         fig,ax = plt.subplots(1,2, figsize = (6.4,4.5))
@@ -172,6 +181,7 @@ def plot_res_params(geom_params,input_params,res_param,observer_params,acs_param
         ax[1].set_ylabel('$Length, \ L_i \ [m]$')
 
         plt.savefig(os.path.join(saved_params['case_dir'],'res_geom.png'), dpi=500, bbox_inches="tight", pad_inches=0.0)
+        plt.close()
 
     fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
     plt.subplots_adjust(wspace = 0.45,bottom = 0.15)
@@ -180,6 +190,7 @@ def plot_res_params(geom_params,input_params,res_param,observer_params,acs_param
     ax.set_xlabel('Radius, r/R')
     ax.set_ylim(bottom = 0)
     plt.savefig(os.path.join(saved_params['case_dir'],'res_count.png'), dpi=500, bbox_inches="tight", pad_inches=0.0)
+    plt.close()
 
 def plot_res_resp(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
 
@@ -201,6 +212,7 @@ def plot_res_resp(geom_params,input_params,res_param,observer_params,acs_params,
     ax[-1].set_xlim([0,res_param['f_max']+1e3])
     ax[-1].set_ylim([-5, 5])
     plt.savefig(os.path.join(saved_params['case_dir'],'Z.png'),format = 'png')
+    plt.close()
 
     R = (saved_params['Z'][:,r_ind]-1)/(saved_params['Z'][:,r_ind]+1)
     fig,ax = plt.subplots(2,1, figsize = (6.4,4.5))
@@ -217,6 +229,7 @@ def plot_res_resp(geom_params,input_params,res_param,observer_params,acs_params,
     ax[-1].grid()
     ax[-1].set_xlim([0,res_param['f_max']+1e3])
     plt.savefig(os.path.join(saved_params['case_dir'],'R.png'),format = 'png')
+    plt.close()
 
     alpha = 1 - abs(R)**2
     fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
@@ -226,3 +239,4 @@ def plot_res_resp(geom_params,input_params,res_param,observer_params,acs_params,
     ax.set_xlim([0,res_param['f_max']+1e3])
     ax.set_ylim([0, 1])
     plt.savefig(os.path.join(saved_params['case_dir'],'alpha.png'),format = 'png')
+    plt.close()
