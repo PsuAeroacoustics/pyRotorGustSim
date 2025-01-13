@@ -40,6 +40,8 @@ def read_case_files(args):
 
     return out
 
+
+
 def run_wopwop(cases = 'cases.nam',parallel = False):
         
     print(f'Running wopwop...')

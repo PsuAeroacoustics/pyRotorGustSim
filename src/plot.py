@@ -45,10 +45,10 @@ def plot_p_tseries(geom_params,input_params,res_param,observer_params,acs_params
         # ax.axis([270,320,-120,60])
         min_ind = pred_data['function_values'][mic_iter,:,-1].argmin()
         # ax.set_xlim([0,360])
-        ax.set_xlim([pred_data['function_values'][mic_iter,min_ind,0]-0.05*(saved_params['omega']/(2*np.pi))**-1,pred_data['function_values'][mic_iter,min_ind,0]+0.05*(saved_params['omega']/(2*np.pi))**-1])
+        ax.set_xlim([pred_data['function_values'][mic_iter,min_ind,0]-0.1*(saved_params['omega']/(2*np.pi))**-1,pred_data['function_values'][mic_iter,min_ind,0]+0.1*(saved_params['omega']/(2*np.pi))**-1])
         # ax.set_yticks(np.arange(10)*20-120)
         # ax.set_ylim([1.1*pred_data['function_values'][:,:,-1].min(),1.1*pred_data['function_values'][:,:,-1].max()])
-        ax.set_ylim([-25,20])
+        # ax.set_ylim([-25,20])
         ax.grid()
         plt.savefig(os.path.join(saved_params['case_dir'],f'tseries_{mic_iter}.png'),format = 'png')
         plt.close()
@@ -98,7 +98,7 @@ def plot_load_dist(geom_params,input_params,res_param,observer_params,acs_params
     
     fig,ax = plt.subplots(subplot_kw=dict(projection = 'polar'))
     lim = [np.min(saved_params['loads'][-int(2*np.pi/saved_params['dpsi']):,:,-1]),np.max(saved_params['loads'][-int(2*np.pi/saved_params['dpsi']):,:,-1])]
-    levels = np.linspace(lim[0],lim[1],50)
+    levels = np.linspace(lim[0],lim[1],41)
     cbar_ticks = np.round(levels)[::4]
     # cbar_ticks = np.round(np.arange(50)*lim/50-lim)[::4]
     dist = ax.contourf(saved_params['psi'][:int(2*np.pi/saved_params['dpsi'])],saved_params['r'],saved_params['loads'][-int(2*np.pi/saved_params['dpsi']):,:,-1].T,levels = levels,cmap = cmap,norm = mcolors.CenteredNorm())
@@ -111,8 +111,8 @@ def plot_load_dist(geom_params,input_params,res_param,observer_params,acs_params
 
     d_loads = np.gradient(saved_params['loads'][:,:,-1],axis = 0)
     fig,ax = plt.subplots(subplot_kw=dict(projection = 'polar'))
-    lim = [np.min(d_loads),np.max(d_loads)]
-    levels = np.linspace(lim[0],lim[1],50)
+    lim = [-10,10]
+    levels = np.linspace(lim[0],lim[1],41)
     cbar_ticks = np.round(levels)[::4]
     # cbar_ticks = np.round(np.arange(50)*lim/50-lim)[::4]
     dist = ax.contourf(saved_params['psi'],saved_params['r'],d_loads.T,levels = levels,cmap = cmap,norm = mcolors.CenteredNorm())
@@ -129,8 +129,8 @@ def plot_filt_load_dist(geom_params,input_params,res_param,observer_params,acs_p
     
     fig,ax = plt.subplots(subplot_kw=dict(projection = 'polar'))
     lim = [np.min(saved_params['filt_loads']),np.max(saved_params['filt_loads'])]
-    levels = np.linspace(lim[0],lim[1],50)
-    cbar_ticks = np.round(levels)[::4]
+    levels = np.linspace(lim[0],lim[1],41)
+    cbar_ticks = np.round(levels)[::5]
     # cbar_ticks = np.round(np.arange(50)*lim/50-lim)[::4]
     dist = ax.contourf(saved_params['psi'],saved_params['r'],saved_params['filt_loads'][:,:,-1].T,levels = levels,cmap = cmap,norm = mcolors.CenteredNorm())
     cbar = fig.colorbar(dist,pad = .1)
@@ -142,8 +142,8 @@ def plot_filt_load_dist(geom_params,input_params,res_param,observer_params,acs_p
 
     d_loads = np.gradient(saved_params['filt_loads'][:,:,-1],axis = 0)
     fig,ax = plt.subplots(subplot_kw=dict(projection = 'polar'))
-    lim = [np.min(d_loads),np.max(d_loads)]
-    levels = np.linspace(lim[0],lim[1],50)
+    lim = [-10,10]
+    levels = np.linspace(lim[0],lim[1],41)
     cbar_ticks = np.round(levels)[::4]
     # cbar_ticks = np.round(np.arange(50)*lim/50-lim)[::4]
     dist = ax.contourf(saved_params['psi'],saved_params['r'],d_loads.T,levels = levels,cmap = cmap,norm = mcolors.CenteredNorm())
@@ -197,10 +197,11 @@ def plot_res_resp(geom_params,input_params,res_param,observer_params,acs_params,
     r_ind = int(.75*saved_params['Z'].shape[-1])
 
     fig,ax = plt.subplots(2,1, figsize = (6.4,4.5))
+    plt.subplots_adjust(bottom = 0.15,left = 0.15)
     ax[0].tick_params(axis = 'x', labelsize=0)
     ax[0].plot(saved_params['f'],np.real(saved_params['Z'][:,r_ind]))
     ax[0].set_ylabel(r'$Resistance, \ \overline{\theta}$')
-    ax[0].set_xlim([500,res_param['f_max']+1e3])
+    ax[0].set_xlim([0,5e3])
     ax[0].set_ylim([0,10])
     ax[0].grid()
 
@@ -209,25 +210,27 @@ def plot_res_resp(geom_params,input_params,res_param,observer_params,acs_params,
     ax[1].set_xlim([500,saved_params['f'][-1]])
     ax[-1].set_xlabel('Frequency [Hz]')
     ax[-1].grid()
-    ax[-1].set_xlim([0,res_param['f_max']+1e3])
+    ax[-1].set_xlim([0,5e3])
     ax[-1].set_ylim([-5, 5])
     plt.savefig(os.path.join(saved_params['case_dir'],'Z.png'),format = 'png')
     plt.close()
 
     R = (saved_params['Z'][:,r_ind]-1)/(saved_params['Z'][:,r_ind]+1)
     fig,ax = plt.subplots(2,1, figsize = (6.4,4.5))
+    plt.subplots_adjust(bottom = 0.15,left = 0.15)
+
     ax[0].tick_params(axis = 'x', labelsize=0)
     ax[0].plot(saved_params['f'],abs(R))
     ax[0].set_ylabel(r'$Reflection, \ |\mathit{R}|$')
     ax[0].grid()
-    ax[0].set_xlim([0,res_param['f_max']+1e3])
+    ax[0].set_xlim([0,5e3])
     ax[0].set_ylim([0, 1])
 
     ax[-1].plot(saved_params['f'],np.unwrap(np.angle(R)))
     ax[-1].set_ylabel('$Phase, \ \phi \ [rad]$')
     ax[-1].set_xlabel('Frequency [Hz]')
     ax[-1].grid()
-    ax[-1].set_xlim([0,res_param['f_max']+1e3])
+    ax[-1].set_xlim([0,5e3])
     plt.savefig(os.path.join(saved_params['case_dir'],'R.png'),format = 'png')
     plt.close()
 
@@ -236,7 +239,7 @@ def plot_res_resp(geom_params,input_params,res_param,observer_params,acs_params,
     ax.plot(saved_params['f'],alpha)
     ax.set_ylabel(r'$Absorption, \alpha$')
     ax.grid()
-    ax.set_xlim([0,res_param['f_max']+1e3])
+    ax.set_xlim([0,5e3])
     ax.set_ylim([0, 1])
     plt.savefig(os.path.join(saved_params['case_dir'],'alpha.png'),format = 'png')
     plt.close()

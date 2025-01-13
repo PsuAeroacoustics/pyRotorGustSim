@@ -23,7 +23,7 @@ plt.rc('lines',**{'linewidth':2})
 #%%
 
 cases_directory =os.getcwd()
-cases = ['unsteady_parallel_lgrid','mdof_geom_lgrid']
+cases = ['baseline_lgrid','mdof_geom_opt_lgrid']
 
 #%%
 acs_data = {}
@@ -45,6 +45,9 @@ df = (nperseg*dt)**-1
 f = np.arange(nperseg)*df
 bpf = np.arange(np.round(nperseg/2+1))
 
+# f_c = np.array([1159, 1156, 1088, 1082, 969, 960, 831, 822, 691, 575])/(669.291/(2*np.pi))
+
+
 pxx = []
 for case in cases:
     pxx.append(welch(acs_data[case]['function_values'][:,:,:,-1], fs=fs, window='hann', nperseg=nperseg, noverlap=None, nfft=None, detrend='constant', return_onesided=True, scaling='density', axis=-1, average='mean')[-1])
@@ -53,9 +56,11 @@ pxx = 10*np.log10(np.array(pxx)*df/20e-6**2)
 for theta_itr in range(N_obs_theta):
     for phi_itr in range(N_obs_phi):
         
+
         fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
         plt.subplots_adjust(left = .2,bottom = .15)
-        ax.plot(bpf,pxx[:,theta_itr,phi_itr].T, marker = 'o')
+        ax.scatter(bpf,pxx[-1,theta_itr,phi_itr], marker = 'o')
+        ax.scatter(bpf,pxx[0,theta_itr,phi_itr], marker = 'o')
         ax.set_xlabel(r'$BPF \ Harmonic$')
         ax.set_ylabel(r'$SPL, \ dB \ (re: \ 20 \mu Pa)$')
         ax.set_title(rf'$\psi = {theta[theta_itr]}^\circ$, $\phi = {phi[phi_itr]}^\circ$')

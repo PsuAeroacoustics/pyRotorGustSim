@@ -9,7 +9,7 @@ from help_funcs import *
 plt.rcParams['text.usetex'] = True
 plt.rcParams['font.family'] = 'serif'
 plt.rcParams['font.serif'] = ["Times New Roman"]
-plt.rcParams['font.size'] = 16
+plt.rcParams['font.size'] = 10
 
 #%%
 
@@ -21,8 +21,9 @@ def get_oaspl(cases_dir):
         oaspl.append(20*np.log10(np.sqrt(np.mean(acs_data['function_values'][:,:,:,-1]**2,axis = -1))/20e-6))
     return oaspl
 
-baseline_dir = '/home/dweitsma/codes/github/DanWeitsman/rotor_gust_interaction/cases/nominal/param_sweeps/Mg_Mt_bl'
-cases_dir = '/home/dweitsma/codes/github/DanWeitsman/rotor_gust_interaction/cases/nominal/param_sweeps/Mg_Mt'
+baseline_dir = '/Users/danielweitsman/codes/github/DanWeitsman/unsteady_BEMT/cases/enlarged_blade/sweeps/Mg_Mt/baseline'
+cases_dir = '/Users/danielweitsman/codes/github/DanWeitsman/unsteady_BEMT/cases/enlarged_blade/sweeps/Mg_Mt/mdof_geom_opt'
+eps = False
 
 cases = [x for x  in os.listdir(cases_dir) if os.path.isdir(os.path.join(cases_dir,x))]
 
@@ -43,7 +44,7 @@ for i,case in enumerate(cases):
     
     max_ind = saved_params[case]['v_gust'][-int((2*np.pi)/saved_params[case]['dpsi']):,-1].argmax()
     start_ind = saved_params[case]['v_gust'][-int((2*np.pi)/saved_params[case]['dpsi']):,-1][:max_ind+1].argmin()
-    end_ind = np.abs(saved_params[case]['v_gust'][-int((2*np.pi)/saved_params[case]['dpsi']):,-1][max_ind:]-.1*saved_params[case]['v_gust'][-int((2*np.pi)/saved_params[case]['dpsi']):,-1][max_ind]).argmin()
+    end_ind = np.abs(saved_params[case]['v_gust'][-int((2*np.pi)/saved_params[case]['dpsi']):,-1][max_ind:]-.645*saved_params[case]['v_gust'][-int((2*np.pi)/saved_params[case]['dpsi']):,-1][max_ind]).argmin()
     gust_width[i] = (max_ind-start_ind+end_ind)*saved_params[case]['dpsi']*saved_params[case]['r'][-1]*saved_params[case]['R']/saved_params[case]['c']
     
     # if len(case) ==7:
@@ -64,8 +65,9 @@ cmap = plt.cm.Spectral.reversed()
 levels = np.linspace(-10,0,21)
 levels_c = np.linspace(-10,0,11)
 
-fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
-plt.subplots_adjust(right = .85,left = .2,bottom = .15)
+figsize =((8.27-2)*.49,(11.69-2)*.35)
+fig,ax = plt.subplots(1,1, figsize = figsize)
+plt.subplots_adjust(left = .2,top = .925,right = .85,bottom = .13)
 dist = ax.contourf(Mg[Mg_sort_ind].reshape(new_shape).T,Mt[Mg_sort_ind][Mt_sort_ind].reshape(new_shape),d_oaspl[Mg_sort_ind][Mt_sort_ind].reshape(new_shape),levels = levels,cmap = cmap,norm = mcolors.CenteredNorm())
 dist2 = ax.contour(Mg[Mg_sort_ind].reshape(new_shape).T,Mt[Mg_sort_ind][Mt_sort_ind].reshape(new_shape),d_oaspl[Mg_sort_ind][Mt_sort_ind].reshape(new_shape),levels = levels_c,colors = 'k')
 plt.clabel(dist2,levels=levels_c)
@@ -74,6 +76,9 @@ cbar.ax.set_ylabel(r'$\Delta \ BVISPL, \ dB \ (re: \ 20 \mu Pa)$')
 cbar.set_ticks(levels[::2])
 ax.set_ylabel(r'$M_T$')
 ax.set_xlabel(r'$M_g$')
-ax.set_ylim([0.2,.6])
-ax.set_xticks(np.arange(3)*(.3-.1)/2+.1)
+ax.set_yticks(np.arange(5)*(.6-.2)/4+.2)
+ax.set_xticks(np.arange(3)*(.3-.1)/2+.05)
 plt.savefig(os.path.join(os.path.dirname(cases_dir),f'Mg_Mt_d_oaspl_carpet.png'),format = 'png')
+if eps:
+    plt.savefig(os.path.join(os.path.dirname(cases_dir),f'Mg_Mt_d_oaspl_carpet.eps'),format = 'eps')
+plt.close()

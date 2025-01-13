@@ -100,8 +100,10 @@ def main():
         wopwop_input_configure(geom_params,input_params,res_param,observer_params,acs_params,saved_params)
 
         if args.filt or args.opt:
-            if args.aero:
-                filter_loads(geom_params,input_params,res_param,observer_params,acs_params,saved_params,opt = args.opt)
+            filter_loads(geom_params,input_params,res_param,observer_params,acs_params,saved_params,opt = args.opt)
+            # if args.opt:
+            #     with open(args.res_param,"w") as res_file:
+            #         json.dump(res_param,res_file,indent=2)
 
     else:
          saved_params  = read_results_from_h5(case_dir)
@@ -123,8 +125,11 @@ def main():
 
     if args.plot:
          if args.filt or args.opt:
-                list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_filt_load_dist,plot_res_resp,plot_res_params]))
-         list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_p_tseries,plot_load_tseries,plot_load_dist,plot_gust_profile]))
+                if 'sigma' in res_param:
+                    list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_filt_load_dist,plot_res_resp]))
+                else:
+                    list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_filt_load_dist,plot_res_resp,plot_res_params]))
+         list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_load_tseries,plot_load_dist]))
 
     write_results_to_h5(saved_params)
     

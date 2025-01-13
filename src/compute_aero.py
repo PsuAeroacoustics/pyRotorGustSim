@@ -6,6 +6,7 @@ import numpy as np
 import aerosandbox as asb
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
+# import neuralfoil as nf
 
 #%%
 
@@ -57,9 +58,6 @@ def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,s
 
     if input_params['computational_params']['unsteady_loading']:
 
-        gamma_vf = input_params['gust_params']['strength']/R
-        r_vf = input_params['gust_params']['core_size']*c/R
-        n = 2
 
         assert ( 'azimuthal_location' in input_params['gust_params'] or 'gust_end_pnts' in input_params['gust_params'] or 'r_trace' in input_params['gust_params']), "Please specify one of the following in the 'gust_params' entry of the parameter file: 'azimuthal_location', 'gust_end_pnts', 'r_trace'" 
 
@@ -111,18 +109,36 @@ def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,s
 
         #$$
 
-        # Indicial response function coefficients and exponents (these are derived from CFD data and given by Leishman)
+
+
+        gamma_v = input_params['gust_params']['strength']
+        y = input_params['gust_params']['peak_location']*-c/R
+        n = 2
+        r_c = 0.05*c/R
+
+        # Nb = 4
+        # sigma = Nb*c/(np.pi*R) 
+        # CT = 0.012
+        # gamma_v = 2*CT/sigma
+        # y = -0.25*c/R
+        # h = np.abs(y)
+        # x = (np.arange(200)*(2*c)/(200-1)-(2*c)/2)/R
+        # x = h
+        r = np.sqrt(h**2+y**2)
+        lam_gust = (c/R*gamma_v/(2*np.pi)*(r/(r_c**(2*n)+r**(2*n))**(1/n)))*h/r
+        v_gust = lam_gust*omega*R
+
+        # v_gust_2 = 2*omega*R*c*CT/sigma*1/(2*np.pi)*(1/((r_c*R)**(2*n)+(r*R)**(2*n)**(1/n))*h*R)
+
+        # fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
+        # ax.plot(x*R/c,v_gust)
+        # ax.grid()
+
+         # Indicial response function coefficients and exponents (these are derived from CFD data and given by Leishman)
         A1 = 0.67
         b1 = .1753
         A2 = 0.33
         b2 = 1.637
-
-        # # gust profile and induced velocity
-        # h = np.expand_dims(((psi%(2*np.pi)-psi_gust)%(2*np.pi)),axis = -1)*ac.rotors[0].blades[0].r
-        v_gust = gamma_vf/(2*np.pi)*(h/(r_vf**(2*n)+(h)**(2*n))**(1/n))
-        # v_gust_zero = np.where(v_gust==0)
-        # v_gust[v_gust_zero] = v_gust[(v_gust_zero[0]+20,v_gust_zero[1])]
-        lam_gust = v_gust/(omega*R)
 
         # total inflow ratio accounting for the gust contributions
         lam = lam_bemt+lam_gust

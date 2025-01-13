@@ -5,30 +5,30 @@ import resonator as res
 
 #%%
 
-def get_sample_info(x,N_res,A_r,A_s,a_min,L_min):
+def get_sample_info(**kwargs):
 
     def get_res_geom(x):
 
-        if N_res==1:
+        if kwargs['N_res']==1:
             a = np.array([x[0]])
-            L = np.array([(x[1]-L_min)+L_min])
+            L = np.array([(x[1]-kwargs['L_min'])+kwargs['L_min']])
         else:
             # number of unique resonators per sample
-            t = np.linspace(0,1, N_res)
+            t = np.linspace(0,1, kwargs['N_res'])
             B = np.insert(x[2:],len(x[2:]),1)@np.array(((1-t)**2,2*t*(1-t),t**2))
         # a = (x[0]-a_min)*B+a_min
             a = x[0]*np.ones(len(B))
-            L = (x[1]-L_min)*B+L_min
+            L = (x[1]-kwargs['L_min'])*B+kwargs['L_min']
         # a = x[0]*B
         # L = x[1]*B
 
-        N = np.floor(A_r*A_s/np.sum(np.pi*a**2,axis = 0))
+        N = np.floor(kwargs['OAR']*kwargs['A_s']/np.sum(np.pi*a**2,axis = 0))
 
         return N,a,L
 
     def get_res_dist(x):
 
-        N = len(A_s)*4
+        N = len(kwargs['A_s'])*4
         t = np.arange(N)
         f_min = 1/(2*N)
         f_max = 1/8
@@ -40,22 +40,26 @@ def get_sample_info(x,N_res,A_r,A_s,a_min,L_min):
 
         return filt_ind
 
-    if len(x)<=4:
-        N,a,L = get_res_geom(x)
-
-    elif len(x)==5:
-        filt_ind = get_res_dist(x[2:])
-        a = np.array([x[0]])
-        L = np.array([x[1]])
-        N = np.floor(A_r*A_s/(np.pi*a**2))
-        N[filt_ind==0] = 0
-
+    if len(kwargs['x'])==3:
+        filt_ind = get_res_dist(kwargs['x'])
+        return filt_ind
     else:
-        N,a,L = get_res_geom(x[:4])
-        filt_ind = get_res_dist(x[4:])
-        N[filt_ind==0] = 0
+        if len(kwargs['x'])==4:
+            N,a,L = get_res_geom(kwargs['x'])
 
-    return N,a,L
+        elif len(kwargs['x'])==5:
+            filt_ind = get_res_dist(kwargs['x'][2:])
+            a = np.array([kwargs['x'][0]])
+            L = np.array([kwargs['x'][1]])
+            N = np.floor(kwargs['OAR']*kwargs['A_s']/(np.pi*a**2))
+            N[filt_ind==0] = 0
+
+        else:
+            N,a,L = get_res_geom(kwargs['x'][:4])
+            filt_ind = get_res_dist(kwargs['x'][4:])
+            N[filt_ind==0] = 0
+
+        return N,a,L
 
             
 def init_res(f,a_n,L_n,a_c,L_c):
@@ -64,6 +68,14 @@ def init_res(f,a_n,L_n,a_c,L_c):
     '''
     res_temp = res.resonator(a_n = a_n,L_n =L_n,a_c = a_c, L_c = L_c)
     res_temp.set_Z(f,model = 'k',rad = False,interior = False,loss = True,table = False)
+    return res_temp
+
+def init_porous_res(f,**kwargs):
+    '''
+    This function creates and returns a resonator object with its complex impedance evaluated
+    '''
+    res_temp = res.resonator(q=kwargs['q'],s_b =kwargs['s_b'],t =kwargs['t'],sigma = kwargs['sigma'],phi = kwargs['phi'])
+    res_temp.set_Z(f)
     return res_temp
 
 def init_fs(f,t_fs,r_fs,phi_fs,SPL,M,Z_cav):

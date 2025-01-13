@@ -13,17 +13,24 @@ def wopwop_input_configure(geom_params,input_params,res_param,observer_params,ac
     
     observer_params.update({'Title':'mic array','attachedTo':'aircraft','tMin':saved_params['t'][-int(input_params['computational_params']['number_of_revs']*2*np.pi/saved_params['dpsi'])],'tMax':saved_params['t'][-1]})
     
-    observer_params.update({'lowPassFrequency':saved_params['omega']/(2*np.pi)*75})
-    observer_params.update({'highPassFrequency':saved_params['omega']/(2*np.pi)})
+    observer_params.update({'lowPassFrequency':saved_params['omega']/(2*np.pi)*40})
+    observer_params.update({'highPassFrequency':saved_params['omega']/(2*np.pi)*6})
 
     #   Determines whether to write out a observer file or not based on what is provided in the corresponding JSON file
     if not 'nbTheta' in observer_params or 'nbx' in observer_params or 'xLoc' in observer_params:
 
         # np.cumsum(np.abs(np.diff(np.sin(2*np.arange(21)*np.pi/20)*30)))+120 - 2sin distribution
-        radius = observer_params['radius']
+        radius = np.array(observer_params['radius'])
         theta = np.array(observer_params['theta'])*np.pi/180
         phi = observer_params['phi']*np.pi/180
-        observer_coordinates = np.array([radius*np.cos(theta),radius*np.sin(theta),radius*np.sin(phi)*np.ones(len(theta))]).T
+
+        if isinstance(radius,np.ndarray):
+            observer_coordinates = np.array([radius*np.cos(phi)*np.cos(theta),radius*np.cos(phi)*np.sin(theta),radius*np.sin(phi)]).T
+        elif isinstance(theta,np.ndarray):
+            observer_coordinates = np.array([radius*np.cos(theta),radius*np.sin(theta),radius*np.sin(phi)*np.ones(len(theta))]).T
+        elif isinstance(phi,np.ndarray):
+            observer_coordinates = np.array([radius*np.cos(theta)*np.ones(len(phi)),radius*np.sin(theta)*np.ones(len(phi)),radius*np.sin(phi)]).T
+
         write_observer_file(os.path.join(saved_params['acs_dir'],f'observer.ascii'),observer=observer_coordinates)
         observer_params.update({'fileName':'observer.ascii'})
 

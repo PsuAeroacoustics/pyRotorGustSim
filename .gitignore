@@ -4,4 +4,5 @@ src/__pycache__/
 .vscode
 bo105.p3d
 .DS_Store
-/cases/nominal/
+/cases
+/dependencies
