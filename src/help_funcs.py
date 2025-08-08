@@ -40,7 +40,9 @@ def read_case_files(args):
 
     return out
 
-
+def update_res_params(file,res_param):
+    with open(file,"w") as res_file:
+        json.dump(res_param,res_file,indent=4)
 
 def run_wopwop(cases = 'cases.nam',parallel = False):
         
@@ -81,17 +83,63 @@ def import_results_from_wopwop(cases_directory):
 def write_results_to_h5(saved_params):
     with h5py.File(os.path.join(saved_params['case_dir'], 'saved_params.h5'), 'w') as f:
         for k,v in saved_params.items():
-            f.create_dataset(k, data = v)
+            if isinstance(v,dict):
+                for k1,v1 in v.items():
+                    f.create_dataset(f'{k}/{k1}', data = v1)
+            else:
+                f.create_dataset(k, data = v)
+
+
+def write_results_to_h5(saved_params):
+    """
+    Exports a nested dictionary to an HDF5 file.
+
+    Args:
+        data (dict): The nested dictionary to export.
+        file_path (str): Path to the HDF5 file to save.
+    """
+    def dict_to_h5(h5_group, data):
+        for key, value in data.items():
+            if isinstance(value, dict):
+                subgroup = h5_group.create_group(key)
+                dict_to_h5(subgroup, value)
+            else:
+                h5_group.create_dataset(key, data=value)
+
+    with h5py.File(os.path.join(saved_params['case_dir'], 'saved_params.h5'), 'w') as f:
+        dict_to_h5(f, saved_params)
+
 
 def read_results_from_h5(case_dir):
-    saved_params ={}
-    with h5py.File(os.path.join(case_dir, 'saved_params.h5'), 'r') as f:
-        for k,v in f.items():
-            if isinstance(v[()], bytes):
-                saved_params.update({k:v[()].decode()})
+    
+    def h5_to_dict(h5_obj):
+        """
+        Recursively converts an HDF5 file/group into a nested dictionary.
+
+        Args:
+            h5_obj (h5py.File or h5py.Group): HDF5 file or group object.
+
+        Returns:
+            dict: Nested dictionary representation of the HDF5 structure.
+        """
+        h5_dict = {}
+        for key,value in h5_obj.items():
+            if isinstance(value, h5py.Group):
+                # Recursively process groups
+                h5_dict.update({key:h5_to_dict(value)})
             else:
-                saved_params.update({k:v[()]})
+                if isinstance(value[()], bytes):
+                    h5_dict.update({key:value[()].decode()})
+                else:
+                    h5_dict.update({key:value[()]})
+        return h5_dict
+
+    with h5py.File(os.path.join(case_dir, 'saved_params.h5'), 'r') as f:
+        saved_params = h5_to_dict(f)
     return saved_params
+
+
+
 
 # def process_wopwop(case_path,pressure = True,oaspl = True):
 #     if pressure: 

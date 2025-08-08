@@ -37,4 +37,4 @@ with open(os.path.join(cases_directory,'run.sh'),"w") as run_file:
     run_file.write("#!/bin/bash\n")
     for i,rg_iter in enumerate(rg):
         for ii,Mt_iter in enumerate(Mt):
-            run_file.write(f"rotor_gust_interaction.py --aero --acs -input_geom geom.json -input_param param_{i*len(rg)+ii}.json -observer_param observer_lgrid.json -acs_param acs_param.json -res_param mdof_geom_param.json\n")
+            run_file.write(f"rotor_gust_interaction.py --aero --acs -input_geom geom.json -input_param param_{i*len(rg)+ii}.json -observer_param observer_lgrid.json -acs_param acs_param.json -res_param sdof_geom_param.json\n")

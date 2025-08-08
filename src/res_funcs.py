@@ -5,61 +5,119 @@ import resonator as res
 
 #%%
 
-def get_sample_info(**kwargs):
+def get_sample_info(filt_ind,A_s,**kwargs):
 
     def get_res_geom(x):
 
-        if kwargs['N_res']==1:
-            a = np.array([x[0]])
-            L = np.array([(x[1]-kwargs['L_min'])+kwargs['L_min']])
-        else:
-            # number of unique resonators per sample
-            t = np.linspace(0,1, kwargs['N_res'])
-            B = np.insert(x[2:],len(x[2:]),1)@np.array(((1-t)**2,2*t*(1-t),t**2))
-        # a = (x[0]-a_min)*B+a_min
-            a = x[0]*np.ones(len(B))
-            L = (x[1]-kwargs['L_min'])*B+kwargs['L_min']
-        # a = x[0]*B
-        # L = x[1]*B
+        # x = [0.0003, 0.07, 0, 1, .1, 1, .2, .2,.2]
+        a = np.array([x[0]])
 
-        N = np.floor(kwargs['OAR']*kwargs['A_s']/np.sum(np.pi*a**2,axis = 0))
+        if kwargs['N_res']==1:
+            L = np.array([(x[1]-kwargs['L_min'])+kwargs['L_min']])
+            N = np.expand_dims(np.floor(kwargs['OAR']*A_s/(np.pi*a**2)),axis = 0)
+        else:
+            t = np.linspace(0,1, kwargs['N_res'])
+            L_dist =(list(x[2:4])+[1])@np.array(((1-t)**2,2*t*(1-t),t**2))
+            L = (x[1]-kwargs['L_min'])*L_dist+kwargs['L_min']
+
+            N_dist = x[4:9]@np.array(((1-t)**4,4*t*(1-t)**3,6*t**2*(1-t)**2,4*t**3*(1-t),t**4))
+            N = np.floor((kwargs['OAR']*np.expand_dims(A_s,axis = -1)/(np.pi*a**2))/np.sum(N_dist)*N_dist).T
+
+        # import matplotlib.pyplot as plt
+        # r_ind = int(len(N)*.75)
+        # fig,ax = plt.subplots(2,1, figsize = (6.5,4.5))
+        # plt.subplots_adjust(bottom = .15, left = 0.15,hspace = .25)
+        # ax[0].plot(t,L_dist)
+        # ax[0].set_ylabel('$B_L$')
+        # ax[0].grid()
+        # ax[1].plot(L)
+        # ax[1].set_ylabel('$L \ [m]$')
+        # ax[1].grid()
+
+        # fig,ax = plt.subplots(2,1, figsize = (6.5,4.5))
+        # plt.subplots_adjust(bottom = .15, left = 0.15,hspace = .25)
+        # ax[0].plot(t,N_dist)
+        # ax[0].set_ylabel('$B_N$')
+        # ax[0].grid()
+        # ax[1].plot(N[:,r_ind])
+        # ax[1].set_ylabel('$N$')
+        # ax[1].grid()
 
         return N,a,L
 
     def get_res_dist(x):
 
-        N = len(kwargs['A_s'])*4
-        t = np.arange(N)
-        f_min = 1/(2*N)
-        f_max = 1/8
+        mult = 8
+        N = len(filt_ind[filt_ind])
 
-        t2 = t/N
-        B = x@np.array(((1-t2)**2,2*t2*(1-t2),t2**2))
+        t = np.arange(N*mult)/(N*mult-1)
+        f_max = (2*np.diff(t[:2])*mult)**-1
+        f_min = (2*N*mult*np.diff(t[:2]))**-1
 
-        filt_ind = (0.5*np.sign(np.round(np.sin(2*np.pi*f_max*B*t),3))+0.5)[2::4]
+        x = (10-10**(1-np.array(x)))/10
+        # x =np.zeros(5)
+
+        phi = 2*np.pi*(x@np.array((1/5*(t-1)**5,
+                                    t**2*(2-4*t+3*t**2-4/5*t**3),
+                                   t**3*(2-3*t+6/5*t**2),
+                                   t**4*(1-4/5*t),
+                                   1/5*t**5))*(f_max-f_min)+f_min*t)
+        # x =[1,1,1]
+        # phi = 2*np.pi*(x@np.array((t*(1/3*t**2-t+1),
+        #                             t**2*(1-2/3*t),
+        #                             1/3*t**3))*(f_max-f_min)+f_min*t)
+        filt_ind[filt_ind] = np.invert(np.sin(phi)[int(mult/2)::mult] < 0)
+
+        # import matplotlib.pyplot as plt
+        # fi = x@np.array(((1-t)**4,4*t*(1-t)**3,6*t**2*(1-t)**2,4*t**3*(1-t),t**4))*(f_max-f_min)+f_min
+
+        # fig,ax = plt.subplots(2,1, figsize = (6.5,4.5))
+        # plt.subplots_adjust(bottom = .15, left = 0.15)
+        # ax[0].set_xticklabels([])
+        # ax[0].plot(t,fi)
+        # ax[0].set_ylabel('$f_i$')
+        # ax[0].grid()
+        # ax[1].plot(t,np.sin(phi))
+        # ax[1].scatter(t[int(mult/2)::mult],filt_ind[filt_ind_extents[0]:])
+        # ax[1].set_xlabel('r/R')
+        # ax[1].grid()
 
         return filt_ind
 
-    if len(kwargs['x'])==3:
-        filt_ind = get_res_dist(kwargs['x'])
-        return filt_ind
-    else:
-        if len(kwargs['x'])==4:
-            N,a,L = get_res_geom(kwargs['x'])
-
-        elif len(kwargs['x'])==5:
-            filt_ind = get_res_dist(kwargs['x'][2:])
-            a = np.array([kwargs['x'][0]])
-            L = np.array([kwargs['x'][1]])
-            N = np.floor(kwargs['OAR']*kwargs['A_s']/(np.pi*a**2))
-            N[filt_ind==0] = 0
-
+    # filt_ind_extents = np.where(filt_ind)[0]
+    # filt_ind_extents = [filt_ind_extents[0],filt_ind_extents[-1]]
+    
+    out = {}
+    for i in range(kwargs['N_patches']):
+        if kwargs['N_res'] >1:
+            x = [kwargs['x'][0]]+kwargs['x'][(i*8+1):(((i+1)*8+1))]
         else:
-            N,a,L = get_res_geom(kwargs['x'][:4])
-            filt_ind = get_res_dist(kwargs['x'][4:])
-            N[filt_ind==0] = 0
+            x = [kwargs['x'][0]]+kwargs['x'][(i+1):(i+2)]
+        N,a,L = get_res_geom(x)
+        out.update({f'patch_{i}':{'N':N,'a':a,'L':L}})
 
-        return N,a,L
+    if kwargs['staggered']:
+        filt_ind = get_res_dist(kwargs['x'][-5:])
+
+    out.update({'filt_ind':filt_ind})
+
+    # if len(kwargs['x'])<=6:
+    #     N,a,L = get_res_geom(kwargs['x'])
+
+    # elif len(kwargs['x'])==7:
+    #     filt_ind = get_res_dist(kwargs['x'][2:])
+    #     a = np.array([kwargs['x'][0]])
+    #     L = np.array([kwargs['x'][1]])
+    #     N = np.floor(kwargs['OAR']*kwargs['A_s']/(np.pi*a**2))
+    # else:
+    #     N,a,L = get_res_geom(kwargs['x'][:4])
+    #     filt_ind = get_res_dist(kwargs['x'][4:])
+    # if kwargs['N_res']>1:
+    #     filt_ind[np.sum(N,axis = -1)==0] = 0
+    # else:
+    #     filt_ind[N==0] = 0
+
+    return out
 
             
 def init_res(f,a_n,L_n,a_c,L_c):
@@ -87,7 +145,7 @@ def init_fs(f,t_fs,r_fs,phi_fs,SPL,M,Z_cav):
     return fs_temp
 
 
-def smeared_Z(f,N,a,L,N_res,facesheet,t_fs,phi_fs,N_fs,A_r,A_s,M,SPL):
+def smeared_Z(f,A_s,**kwargs):
     '''
     This function computes the smeared impedance and absorption for a sample that consists of multiple resonator cavities that have different geometries. 
     
@@ -112,9 +170,11 @@ def smeared_Z(f,N,a,L,N_res,facesheet,t_fs,phi_fs,N_fs,A_r,A_s,M,SPL):
     #     Z = np.array(init_res(f,a_n = a,L_n = L/2,a_c = a,L_c = L/2).Z)
     #     Z_tot = ((np.expand_dims(N*np.pi*a**2/A_s,axis = -1)*Z**-1)**-1).T
     # else:
-    Z = np.array([init_res(f,a_n = a[i],L_n = L[i]/2,a_c = a[i],L_c = L[i]/2).Z for i in range(N_res)]).T
-    Z_tot = (((N*np.pi*np.expand_dims(a,axis = -1)**2/A_s).T@Z.T**-1)**-1).T
-
+    Z = np.array([init_res(f,a_n = kwargs['a'],L_n = kwargs['L'][i]/2,a_c = kwargs['a'],L_c = kwargs['L'][i]/2).Z for i in range(len(kwargs['L']))])
+    # if len(kwargs['L'])>1:
+    Z_tot = (((kwargs['N']*np.pi*kwargs['a']**2)/A_s).T@Z**-1).T**-1
+    # else:
+    # Z_tot =(np.expand_dims(kwargs['N']*np.pi*kwargs['a']**2/kwargs['A_s'],axis = -1)@Z**-1).T**-1
     # if facesheet:
 
     #     # if linear:
@@ -150,28 +210,29 @@ def smeared_Z(f,N,a,L,N_res,facesheet,t_fs,phi_fs,N_fs,A_r,A_s,M,SPL):
     #             Z_fs = np.array([[init_fs(f,t_fs = t_fs,r_fs = r_fs,phi_fs = phi_fs[i],M = M[ii],SPL = SPL[ii],Z_cav = Z[i]).Z for i in range(N_res)] for ii in range(elements)]).transpose(0,-1,1)
 
 
-    alpha = 1 - abs((Z_tot-1)/(Z_tot+1))**2
+    # alpha = 1 - abs((Z_tot-1)/(Z_tot+1))**2
 
 
-    return Z_tot, alpha
+    return Z_tot
 
-def get_filt_resp(Z_tot,odd = True):
+def get_filt_resp(Z_tot):
 
-    filt_resp_shape = Z_tot.shape
-    # reflection coefficient
+    N_elements = Z_tot.shape[-1]
+    N_pnt = int(len(Z_tot))
+    odd = bool((N_pnt*2)%2)
+     # reflection coefficient
     R = (Z_tot-1)/(Z_tot+1)
-    R[Z_tot==1] = 1+1j*0
     
     if odd:
-        filt_resp = np.ones((filt_resp_shape[0]*2+1,filt_resp_shape[-1]),dtype = complex)
-        filt_resp[1:int(filt_resp_shape[0])+1] = R
-        filt_resp[int(filt_resp_shape[0])+1:] = np.conj(R)[::-1]
+        filt_resp = np.ones((N_pnt*2+1,N_elements),dtype = complex)
+        filt_resp[1:N_pnt+1] = R
+        filt_resp[N_pnt+1:] = np.conj(R)[::-1]
 
     else:
         # complex admittance of the resonators
-        filt_resp = np.ones((filt_resp_shape[0]*2,filt_resp_shape[-1]),dtype = complex)
-        filt_resp[1:int(filt_resp_shape[0])] = R[:-1]
-        filt_resp[int(filt_resp_shape[0])+1:] = np.conj(R[:-1])[::-1]
+        filt_resp = np.ones((N_pnt*2,N_elements),dtype = complex)
+        filt_resp[1:N_pnt] = R[:-1]
+        filt_resp[N_pnt+1:] = np.conj(R[:-1])[::-1]
 
     return filt_resp
 
@@ -180,19 +241,25 @@ def apply_filt(loads,filt_resp):
     Xm = fft(loads,axis = 0)
     # Xm_filt = np.zeros(Xm.shape,dtype=complex)
     # Xm_filt = (Xm.T*filt_resp).T
-    Xm_filt = (Xm*np.expand_dims(filt_resp,axis = -1))
+    Xm_filt = Xm*np.expand_dims(filt_resp,axis = -1)
     # performs an ifft to convert filtered loads back to the time domain
     xn_filt = np.real(ifft(Xm_filt,axis =0))
     return xn_filt
 
-def get_opt_bounds(x,r_min,r_max,L_min,L_max):
-    if len(x) < 4:
-        bounds = Bounds(lb = (r_min,L_min), ub = (r_max,L_max),keep_feasible=True)
-    elif len(x) == 4:
-        bounds = Bounds(lb = (r_min,L_min,0,0), ub = (r_max,L_max,1,1),keep_feasible=True)
-    elif len(x) == 5:
-        bounds = Bounds(lb = (r_min,L_min,-1,-1,-1), ub = (r_max,L_max,1,1,1),keep_feasible=True)
-    else:
-        bounds = Bounds(lb = (r_min,L_min,0,0,-1,-1,-1), ub = (r_max,L_max,1,1,1,1,1),keep_feasible=True)
+def get_opt_bounds(**kwargs):
+
+    lb,ub= [kwargs['r_min'],kwargs['L_min']], [kwargs['r_max'],kwargs['L_max']]
+    if kwargs['N_res']>1:
+        lb = lb+[0]*7
+        ub = ub+[1]*7
+    lb[1:] = np.tile(lb[1:],kwargs['N_patches'])
+    ub[1:] = np.tile(ub[1:],kwargs['N_patches'])
+
+    if kwargs['staggered']:
+        lb = lb+[0]*5
+        ub = ub+[1]*5
+
+    bounds = Bounds(lb = lb, ub = ub,keep_feasible=True)
     return bounds
+ 
  

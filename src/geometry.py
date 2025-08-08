@@ -15,21 +15,21 @@ class aircraft:
 
 class rotor:
 
-    def __init__(self,Nb,R,e,c,th0,th_tw,N_elements,af,Cl_a,origin,omega,V_c,C_T_target,atmos):
+    def __init__(self,Nb,R,e,AR,TR,th0,th_tw,N_elements,af,Cl_a,origin,omega,V_c,C_T_target,atmos):
 
         self.Nb = Nb
         self.R = R
-        self.c = c
         self.e = e
         self.th0 = th0
         self.th_tw = th_tw
         self.origin = origin
         self.N_elements = N_elements
-        self.sigma = self.Nb*self.c/(np.pi*self.R)
 
         elems = (np.arange(self.N_elements+1)*(self.R-self.e)/(self.N_elements)+self.e)/self.R
         r = 0.5*(elems[1:]+elems[:-1])
-        c = self.c/self.R
+        self.c = R/AR*(TR-(TR-1)*r)
+        sigma = self.Nb*self.c/(np.pi*self.R)
+        self.sigma = np.trapezoid(sigma,x = r)
         th = self.th0+r*self.th_tw
 
         self.omega = omega
@@ -37,22 +37,23 @@ class rotor:
         self.C_T_target= C_T_target
         self.lam_c = V_c/(self.omega*self.R)
 
-        Re = omega*R*r*c/atmos.nu
+        Re = omega*R*r*self.c/atmos.nu
         M = omega*R*r/atmos.sos
 
-        self.blades = [blade(r,elems,self.c,self.R,th,af,Cl_a=Cl_a,offset = b_iter*2*np.pi/self.Nb,Re = Re,M = M) for b_iter in range(self.Nb)]
+        self.blades = [blade(r,elems,self.c,self.R,sigma,th,af,Cl_a=Cl_a,offset = b_iter*2*np.pi/self.Nb,Re = Re,M = M) for b_iter in range(self.Nb)]
 
     def set_loads(self):
-        self.CT =np.sum(np.array([np.trapz(b.dCT,x = b.r) for b in self.blades])) 
-        self.CP =np.sum(np.array([np.trapz(b.dCP,x = b.r) for b in self.blades])) 
+        self.CT =np.sum(np.array([np.trapezoid(b.dCT,x = b.r) for b in self.blades])) 
+        self.CP =np.sum(np.array([np.trapezoid(b.dCP,x = b.r) for b in self.blades])) 
 
 
 class blade:
-    def __init__(self,r,elems,c,R,th,af,Cl_a,offset,Re,M):
+    def __init__(self,r,elems,c,R,sigma,th,af,Cl_a,offset,Re,M):
         self.r = r
         self.elems = elems
         self.c = c
         self.R = R
+        self.sigma = sigma
         self.th = th
         self.af = af
         self.offset = offset

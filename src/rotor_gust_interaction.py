@@ -29,26 +29,34 @@ def main():
 		required=False
 	)
     parser.add_argument(
-		"--filt",
+		"-f","--filt",
 		action='store_true',
 		help="Filter blade loads with the provided resonator parameters",
 		default=False,
 		required=False
 	)
     parser.add_argument(
-		"--opt",
+		"-o","--opt",
 		action='store_true',
 		help="Optimize resonator geometry and distribution",
 		default=False,
 		required=False
 	)
     parser.add_argument(
-		"--plot",
+		"-p","--plot",
 		action='store_true',
 		help="Compute acoustics",
 		default=False,
 		required=False
 	)
+    parser.add_argument(
+		'-nc',"--noncompact",
+		action='store_true',
+		help="Include flag to blade loads from estimated surface pressure distribution (scaled nominal distribution)",
+		default=False,
+		required=False
+	)
+    
     parser.add_argument(
         "-input_geom",
         type= str,
@@ -92,7 +100,7 @@ def main():
         os.mkdir(case_dir)
         os.mkdir(acs_dir)
 
-        compute_aero(geom_params,input_params,res_param,observer_params,acs_params,saved_params)
+        compute_aero(geom_params,input_params,res_param,observer_params,acs_params,saved_params,args.filt)
         
         if acs_params['thicknessNoiseFlag'] or acs_params['totalNoiseFlag']:
             build_blade_geom(geom_params,input_params,res_param,observer_params,acs_params,saved_params)
@@ -100,7 +108,7 @@ def main():
         wopwop_input_configure(geom_params,input_params,res_param,observer_params,acs_params,saved_params)
 
         if args.filt or args.opt:
-            filter_loads(geom_params,input_params,res_param,observer_params,acs_params,saved_params,opt = args.opt)
+            filter_loads(geom_params,input_params,res_param,observer_params,acs_params,saved_params,opt = args.opt,noncompact=args.noncompact)
             # if args.opt:
             #     with open(args.res_param,"w") as res_file:
             #         json.dump(res_param,res_file,indent=2)
@@ -114,7 +122,7 @@ def main():
             parallel = True
         else:
             parallel = False 
-
+        # parallel = False
         run_wopwop(cases = f"{input_params['case_name']}{os.sep}cases.nam",parallel = parallel)
         process_wopwop(cases_directory=case_dir,cases = 'cases.nam')
         
@@ -132,7 +140,7 @@ def main():
          list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_load_tseries,plot_load_dist]))
 
     write_results_to_h5(saved_params)
-    
+    update_res_params(args.res_param,res_param)
 
 if __name__ == "__main__":
 	main()

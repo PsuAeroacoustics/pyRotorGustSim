@@ -11,10 +11,11 @@ def wopwop_input_configure(geom_params,input_params,res_param,observer_params,ac
     
     environment_const = EnvironmentConstants()
     
+    # observer_params.update({'Title':'mic array','attachedTo':'aircraft','tMin':saved_params['t'][-int(input_params['computational_params']['number_of_revs']*2*np.pi/saved_params['dpsi'])],'tMax':saved_params['t'][-1]})
     observer_params.update({'Title':'mic array','attachedTo':'aircraft','tMin':saved_params['t'][-int(input_params['computational_params']['number_of_revs']*2*np.pi/saved_params['dpsi'])],'tMax':saved_params['t'][-1]})
-    
-    observer_params.update({'lowPassFrequency':saved_params['omega']/(2*np.pi)*40})
-    observer_params.update({'highPassFrequency':saved_params['omega']/(2*np.pi)*6})
+
+    # observer_params.update({'lowPassFrequency':saved_params['omega']/(2*np.pi)*40})
+    # observer_params.update({'highPassFrequency':saved_params['omega']/(2*np.pi)*6})
 
     #   Determines whether to write out a observer file or not based on what is provided in the corresponding JSON file
     if not 'nbTheta' in observer_params or 'nbx' in observer_params or 'xLoc' in observer_params:
@@ -24,11 +25,11 @@ def wopwop_input_configure(geom_params,input_params,res_param,observer_params,ac
         theta = np.array(observer_params['theta'])*np.pi/180
         phi = observer_params['phi']*np.pi/180
 
-        if isinstance(radius,np.ndarray):
+        if isinstance(observer_params['radius'],list):
             observer_coordinates = np.array([radius*np.cos(phi)*np.cos(theta),radius*np.cos(phi)*np.sin(theta),radius*np.sin(phi)]).T
-        elif isinstance(theta,np.ndarray):
+        elif isinstance(observer_params['theta'],list):
             observer_coordinates = np.array([radius*np.cos(theta),radius*np.sin(theta),radius*np.sin(phi)*np.ones(len(theta))]).T
-        elif isinstance(phi,np.ndarray):
+        elif isinstance(observer_params['phi'],list):
             observer_coordinates = np.array([radius*np.cos(theta)*np.ones(len(phi)),radius*np.sin(theta)*np.ones(len(phi)),radius*np.sin(phi)]).T
 
         write_observer_file(os.path.join(saved_params['acs_dir'],f'observer.ascii'),observer=observer_coordinates)

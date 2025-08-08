@@ -7,15 +7,18 @@ import aerosandbox as asb
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
 # import neuralfoil as nf
+# from xfoil import XFoil
+# from xfoil import model
 
 #%%
 
-def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
+def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,saved_params,filt):
     
     Nb = geom_params['number_of_blades']
     R = geom_params['radius']
     e = geom_params['r_c']*R
-    c = R/geom_params['AR']
+    AR = geom_params['AR']
+    TR = geom_params['TR']
     th_tw = geom_params['theta_tw']*np.pi/180
     th0 = geom_params['theta_initial']*np.pi/180
     Cl_a = 2*np.pi
@@ -29,12 +32,47 @@ def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,s
     C_T_target = input_params['flight_params']['C_T_target']
     omega = input_params['flight_params']['omega']
     V_c = 0
-    af = asb.Airfoil(geom_params['airfoil'])
-    dpsi = input_params['computational_params']['d_psi']*np.pi/180
-    iterations = int(input_params['computational_params']['number_of_revs']*(2*np.pi)/dpsi)
 
-    n_revs = np.ceil(omega/(2*np.pi*res_param['df']))
-    iterations = int(n_revs*2*np.pi/dpsi)
+    af = asb.Airfoil(geom_params['airfoil'])
+    # af.coordinates = af.repanel(n_points_per_side = int(saved_params['airfoil_points']/2)).coordinates*saved_params['c']
+
+    # aoa_polar = np.arange((20-(-5))/.5+1)*.5-5
+    # Re = 0.75*R*omega*c/nu
+    # M = 0.75*omega*R/sos
+    # polar = af.get_aero_from_neuralfoil(alpha=aoa_polar, Re=Re,mach =M,model_size='xlarge')
+    # aoa_cp_dist = 0.5*(aoa_polar[polar['CL'].argmax()]+aoa_polar[np.abs(polar['CL']).argmin()])
+
+    # xf = XFoil()
+    # xf.airfoil = model.Airfoil(x = af.coordinates[:,0],y = af.coordinates[:,1])    
+    # xf.max_iter = 100
+    # xf.Re = Re
+    # xf.M = M
+    # cl,cd = xf.a(aoa_cp_dist, as_dict=False)[:2]
+
+    # cp = xf.get_cp_distribution()[-1]
+    # cl = np.trapz(cp,x = af.coordinates[:,0],axis = -1)*np.cos(aoa_cp_dist*np.pi/180)+np.trapz(cp,x = af.coordinates[:,-1],axis = -1)*np.sin(aoa_cp_dist*np.pi/180)
+    # cp_dist = cp/cl
+
+    # out = xf.a(5, as_dict=True)
+    # x,y,cp = xf.get_cp_distribution()
+    # np.trapz(cp)
+    # th_u = (np.arctan2(np.gradient(y),-np.gradient(x)))[:int(len(cp)/2)]
+    # th_l = (np.arctan2(-np.gradient(y),np.gradient(x)))[int(len(cp)/2):]
+    # # np.trapz(cp,x = x)*np.cos(5*np.pi/180)+np.trapz(cp,x = y)*np.sin(5*np.pi/180)
+    # cn = np.trapz((cp[int(len(cp)/2)+1:]-cp[:int(len(cp)/2)][::-1]),x = x[:int(len(cp)/2)][::-1])
+    # ca = np.trapz((cp[:int(len(cp)/2)][::-1]-cp[int(len(cp)/2)+1:]),x = y[int(len(cp)/2)+1:])
+
+    # fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
+    # ax.plot(x,y)
+    # ax.plot(x[:int(len(cp)/2)],cp[:int(len(cp)/2)])
+    # ax.plot(x[int(len(cp)/2):],cp[int(len(cp)/2):])
+
+
+    dpsi = input_params['computational_params']['d_psi']*np.pi/180
+    iterations = int((input_params['computational_params']['number_of_revs']+1)*(2*np.pi)/dpsi)
+
+    # n_revs = np.ceil(omega/(2*np.pi*res_param['df']))
+    # iterations = int(n_revs*2*np.pi/dpsi*2)
     psi = np.arange(iterations)*dpsi
     
     dt = dpsi/omega
@@ -44,15 +82,21 @@ def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,s
     # initialize aircraft and rotor object
     atmos = Atmosphere()
     ac = aircraft(1)
-    ac.rotors = [rotor(Nb = Nb,R = R,e = e,c = c,th0 = th0,th_tw = th_tw,N_elements = N_elements,af = af,Cl_a=Cl_a,origin = origin,omega = omega,V_c = V_c,C_T_target = C_T_target,atmos=atmos) for r_iter in range(ac.N_rotor)]
+    ac.rotors = [rotor(Nb = Nb,R = R,e = e,AR = AR,TR = TR,th0 = th0,th_tw = th_tw,N_elements = N_elements,af = af,Cl_a=Cl_a,origin = origin,omega = omega,V_c = V_c,C_T_target = C_T_target,atmos=atmos) for r_iter in range(ac.N_rotor)]
 
     # trims rotor in regular hovering flight
-    th0 = opt.newton(trim,x0 = ac.rotors[0].th0,args=(ac.rotors[0],ac.rotors[0].blades[0]),tol=5e-6,full_output=False)
+    # if filt:
+    #     xtr_upper = res_param['c_extents'][0]
+    # else:
+    #     xtr_upper = 1
+    xtr_upper = res_param['c_extents'][0]
+
+    th0 = opt.newton(trim,x0 = ac.rotors[0].th0,args=(ac.rotors[0],ac.rotors[0].blades[0],xtr_upper),tol=5e-6,full_output=False)
     ac.rotors[0].th0 = th0
     ac.rotors[0].blades[0].set_twist(ac.rotors[0])
     ac.rotors[0].blades[0].set_loads()
     lam_bemt = ac.rotors[0].blades[0].lam
-
+    # print(ac.rotors[0].blades[0].c)
     
     #%%
 
@@ -109,12 +153,10 @@ def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,s
 
         #$$
 
-
-
         gamma_v = input_params['gust_params']['strength']
-        y = input_params['gust_params']['peak_location']*-c/R
+        y = -input_params['gust_params']['peak_location']/AR
         n = 2
-        r_c = 0.05*c/R
+        r_c = 0.05/AR
 
         # Nb = 4
         # sigma = Nb*c/(np.pi*R) 
@@ -122,17 +164,40 @@ def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,s
         # gamma_v = 2*CT/sigma
         # y = -0.25*c/R
         # h = np.abs(y)
-        # x = (np.arange(200)*(2*c)/(200-1)-(2*c)/2)/R
+        # h = (np.arange(200)*(2/AR)/(200-1)-(2/AR)/2)
         # x = h
         r = np.sqrt(h**2+y**2)
-        lam_gust = (c/R*gamma_v/(2*np.pi)*(r/(r_c**(2*n)+r**(2*n))**(1/n)))*h/r
-        v_gust = lam_gust*omega*R
+        lam_gust= ((R/AR)/R*gamma_v/(2*np.pi)*(r/(r_c**(2*n)+r**(2*n))**(1/n)))*h/r
 
+        # lam_gust = np.zeros(lam_gust_1.shape)
+        # ind = np.abs(0.75-ac.rotors[0].blades[0].r).argmin()
+        # lam_gust[:,ind] = 15*lam_gust_1[:,ind]
+
+        v_gust = lam_gust*omega*R
+        ind = np.where(v_gust==0)
+        v_gust[ind] = v_gust[tuple((ind[0]-1,ind[1]))]
         # v_gust_2 = 2*omega*R*c*CT/sigma*1/(2*np.pi)*(1/((r_c*R)**(2*n)+(r*R)**(2*n)**(1/n))*h*R)
+        # fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
+        # ax.plot(h[:int(2*np.pi/dpsi),-1]*AR,v_gust[:int(2*np.pi/dpsi),-1],label = 'gust velocity')
+        # # ax.set_xlim([-0.2,1.4])
+        # # ax.set_xticks(np.arange(9)*0.2-0.2)
+        # # ax.set_ylim([0,160])
+        # ax.grid()
+
 
         # fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
-        # ax.plot(x*R/c,v_gust)
+        # ax.plot(psi[:int(2*np.pi/dpsi)],v_gust[:int(2*np.pi/dpsi)]*3.28084,label = 'gust velocity')
+        # ax.legend(np.round(ac.rotors[0].blades[0].r[::4],2))
+        # # ax.set_xlim([-0.2,1.4])
+        # # ax.set_ylim([0,160])
         # ax.grid()
+
+        # fig,ax = plt.subplots(subplot_kw=dict(projection = 'polar'))
+        # levels = np.linspace(0,35,21)
+        # dist = ax.contourf(psi[:int(2*np.pi/dpsi)],ac.rotors[0].blades[0].r,v_gust[:int(2*np.pi/dpsi)].T,levels = levels)
+        # cbar = fig.colorbar(dist,pad = .1)
+        # cbar.ax.set_ylabel(r'$\alpha \ [deg]$')
+
 
          # Indicial response function coefficients and exponents (these are derived from CFD data and given by Leishman)
         A1 = 0.67
@@ -141,12 +206,12 @@ def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,s
         b2 = 1.637
 
         # total inflow ratio accounting for the gust contributions
-        lam = lam_bemt+lam_gust
+        lam = lam_gust+lam_bemt
         U = np.sqrt(lam**2+ac.rotors[0].blades[0].r**2)
         beta = np.sqrt(1-(U*omega*R/sos)**2)
         
         # non-dimensionalized distance in terms of half chords
-        s = omega*R*ac.rotors[0].blades[0].r*np.expand_dims(t,axis = -1)/(c/2)
+        s = omega*R*ac.rotors[0].blades[0].r*np.expand_dims(t,axis = -1)/(ac.rotors[0].blades[0].c/2)
         ds = np.diff(s,axis = 0)[0]
 
         aoa_eff = np.zeros((iterations,N_elements))
@@ -161,17 +226,49 @@ def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,s
             aoa_eff[i] = dCL/Cl_a
             X_temp = X
             Y_temp = Y
-
-        aoa_eff = aoa_eff+np.expand_dims(ac.rotors[0].blades[0].aoa,axis = 0)
+        # aoa_eff = aoa_eff+np.expand_dims(ac.rotors[0].blades[0].aoa,axis = 0)
+        # aoa_eff = (ac.rotors[0].blades[0].th - lam_gust/ac.rotors[0].blades[0].r)
         # new effective inflow angle
         phi_eff = ac.rotors[0].blades[0].th - aoa_eff
         # spanwise Reynold's and Mach numbers
         Re = np.ones(aoa_eff.shape)*ac.rotors[0].blades[0].Re
         M = np.ones(aoa_eff.shape)*ac.rotors[0].blades[0].M
         CL,CD = get_af_coeffs(ac.rotors[0].blades[0].af,aoa_eff*180/np.pi,Re,M)
+
         # sectional axial and normal force coefficients
         dCz = CL*np.cos(phi_eff)-CD*np.sin(phi_eff)
         dCx = CL*np.sin(phi_eff)+CD*np.cos(phi_eff)
+
+        
+        # cl = np.zeros(360)
+        # cd = np.zeros(360)
+        # cp = np.zeros((360,len(af.coordinates)))
+
+        # for i in range(360):
+        #     xf.Re = Re[i,int(0.75*N_elements)] 
+        #     xf.M = M[i,int(0.75*N_elements)]
+        #     cl[i],cd[i] = xf.a(aoa_eff[i,int(0.75*N_elements)]*180/np.pi, as_dict=False)[:2]
+        #     cp[i] = xf.get_cp_distribution()[-1]
+
+        # cl_cp = np.trapz(cp,x = af.coordinates[:,0],axis = -1)*np.cos(aoa_eff[:360,int(0.75*N_elements)])+np.trapz(cp,x = af.coordinates[:,-1],axis = -1)*np.sin(aoa_eff[:360,int(0.75*N_elements)])
+
+        # cp = cp_dist*np.expand_dims(CL,axis = -1)
+        # cl_cp = np.trapz(cp,x = af.coordinates[:,0],axis = -1)*np.cos(aoa_cp_dist*np.pi/180)+np.trapz(cp,x = af.coordinates[:,-1],axis = -1)*np.sin(aoa_cp_dist*np.pi/180)
+        # dCz = cl_cp*np.cos(phi_eff)-CD*np.sin(phi_eff)
+
+
+        # dCT_cp = np.expand_dims(0.5*ac.rotors[0].c/(np.pi*ac.rotors[0].R)*U**2,axis = -1)*cp
+        # dFz_cp = dCT_cp*atmos.rho*np.pi*ac.rotors[0].R*(ac.rotors[0].omega*ac.rotors[0].R)**2
+        # dFz_cp = np.trapz(dFz_cp,x = af.coordinates[:,0],axis = -1)*np.cos(aoa_cp_dist*np.pi/180)+np.trapz(dFz_cp,x = af.coordinates[:,-1],axis = -1)*np.sin(aoa_cp_dist*np.pi/180)
+
+
+        # ax.plot(cl_cp[:360,int(0.75*N_elements)])
+        # ax.legend(['neuralfoil','xfoil','from cp'])
+
+        # fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
+        # ax.plot(dFz[:360,int(0.75*N_elements)])
+        # ax.plot(dFz_cp[:360,int(0.75*N_elements)])
+        # ax.legend(['neuralfoil','xfoil','from cp'])
 
 
     else:
@@ -184,8 +281,8 @@ def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,s
     dCP = 0.5*ac.rotors[0].c/(np.pi*ac.rotors[0].R)*ac.rotors[0].blades[0].r*U**2*dCx
 
     # sectional dimensionalized blade loads
-    dFx= dCP*atmos.rho*np.pi*ac.rotors[0].R**2*(ac.rotors[0].omega*ac.rotors[0].R)**2
-    dFz = dCT*atmos.rho*np.pi*ac.rotors[0].R*(ac.rotors[0].omega*ac.rotors[0].R)**2
+    dFx= dCP*rho*np.pi*ac.rotors[0].R**2*(ac.rotors[0].omega*ac.rotors[0].R)**2
+    dFz = dCT*rho*np.pi*ac.rotors[0].R*(ac.rotors[0].omega*ac.rotors[0].R)**2
     dFy = np.zeros(dFz.shape)
     loads = np.array([dFy,-dFx,dFz]).transpose(1,2,0)
 
@@ -194,6 +291,8 @@ def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,s
     lifting_line_norms = np.expand_dims(np.array([np.zeros(N_elements),np.zeros(N_elements),np.ones(N_elements)]).T,axis = 0)
 
     if input_params['computational_params']['unsteady_loading']:
-        saved_params.update({'t':t,'iterations':iterations,'r_elem':ac.rotors[0].blades[0].elems,'r':ac.rotors[0].blades[0].r,"th":ac.rotors[0].blades[0].th,'airfoil':geom_params['airfoil'],'airfoil_points':input_params['computational_params']['airfoil_elements'],'R':R,'e':e,'c':c,'dpsi':dpsi,'dt':dt,'sos':sos,'N_elements':N_elements,'omega':omega,'psi':psi,'h_gust':h,'v_gust':v_gust,'s':s,'th0':th0,'CL':CL,'CD':CD,'aoa_eff':aoa_eff,'dCT':dCT,'dCP':dCP,'loads':loads,'lifting_line_nodes':lifting_line_nodes,'lifting_line_norms':lifting_line_norms})
+        saved_params.update({'t':t,'iterations':iterations,'r_elem':ac.rotors[0].blades[0].elems,'r':ac.rotors[0].blades[0].r,"th":ac.rotors[0].blades[0].th,'airfoil':geom_params['airfoil'],'airfoil_points':input_params['computational_params']['airfoil_elements'],'th_tw':th_tw,'TR':TR,'AR':AR,'R':R,'e':e,'c':ac.rotors[0].blades[0].c,'dpsi':dpsi,'dt':dt,'sos':sos,'N_elements':N_elements,'omega':omega,'psi':psi,'h_gust':h,'v_gust':v_gust,'U':U,'s':s,'th0':th0,'CL':CL,'CD':CD,'aoa':aoa_eff,'phi_eff':phi_eff,'dCT':dCT,'dCP':dCP,'loads':loads,'lifting_line_nodes':lifting_line_nodes,'lifting_line_norms':lifting_line_norms})
     else:
-        saved_params.update({'t':t,'iterations':iterations,'r_elem':ac.rotors[0].blades[0].elems,'r':ac.rotors[0].blades[0].r,"th":ac.rotors[0].blades[0].th,'airfoil':geom_params['airfoil'],'airfoil_points':input_params['computational_params']['airfoil_elements'],'R':R,'e':e,'c':c,'dpsi':dpsi,'dt':dt,'sos':sos,'N_elements':N_elements,'omega':omega,'psi':psi,'th0':th0,'CL':ac.rotors[0].blades[0].CL,'CD':ac.rotors[0].blades[0].CD,'aoa_eff':ac.rotors[0].blades[0].aoa,'dCT':dCT,'dCP':dCP,'loads':loads,'lifting_line_nodes':lifting_line_nodes,'lifting_line_norms':lifting_line_norms})
+        saved_params.update({'t':t,'iterations':iterations,'r_elem':ac.rotors[0].blades[0].elems,'r':ac.rotors[0].blades[0].r,"th":ac.rotors[0].blades[0].th,'airfoil':geom_params['airfoil'],'airfoil_points':input_params['computational_params']['airfoil_elements'],'th_tw':th_tw,'TR':TR,'AR':AR,'R':R,'e':e,'c':ac.rotors[0].blades[0].c,'dpsi':dpsi,'dt':dt,'sos':sos,'N_elements':N_elements,'omega':omega,'psi':psi,'th0':th0,'CL':ac.rotors[0].blades[0].CL,'CD':ac.rotors[0].blades[0].CD,'aoa':ac.rotors[0].blades[0].aoa,'dCT':dCT,'dCP':dCP,'loads':loads,'lifting_line_nodes':lifting_line_nodes,'lifting_line_norms':lifting_line_norms})
+
+
