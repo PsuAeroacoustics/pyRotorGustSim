@@ -217,7 +217,8 @@ def filter_loads(geom_params,input_params,res_param,observer_params,acs_params,s
         # fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
         # plt.subplots_adjust(left = 0.15,bottom = .15)
         # # ax.plot(saved_params['v_gust'][:,-1])
-        # ax.plot(np.gradient(saved_params['loads'][:,-1,-1]))
+        # ax.plot(saved_params['loads'][:,-1,-1])
+        # ax.plot(filt_loads[:,-1,-1])
         # ax.set_xlabel('$\psi$ [deg]')
         # ax.grid()
 
@@ -247,7 +248,7 @@ def filter_loads(geom_params,input_params,res_param,observer_params,acs_params,s
         # n_revs = np.ceil(omega/(2*np.pi*res_param['df']))
     # iterations = int(n_revs*2*np.pi/dpsi*2)
 
-    N = int(np.max((np.ceil((saved_params['dt']*res_param['df'])**-1),np.ceil(saved_params['iterations']*2))))
+    N = int(np.max((np.ceil((saved_params['dt']*res_param['df'])**-1),np.ceil(saved_params['iterations']*4))))
 
     df = (N*saved_params['dt'])**-1
     # frequency vector [Hz]

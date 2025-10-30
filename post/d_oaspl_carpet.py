@@ -18,7 +18,7 @@ plt.rcParams['font.size'] = 16
 #
 
 cases_directory ='/Users/danielweitsman/codes/github/DanWeitsman/unsteady_BEMT/cases/final_designs/sweeps/rg_Mg'
-cases = ['baseline_untapered_AR10_select/case_12','sdof_geom_untapered_AR10_select_OAR6/case_12']
+cases = ['baseline_untapered_AR12_select/case_66','sdof_geom_untapered_AR12_select/case_66']
 
 oaspl = {}
 for case in cases:
@@ -53,7 +53,7 @@ ax.set_ylabel(r'$OASPL, \ dB \ (re: \ 20 \mu Pa)$')
 
 # levels = np.round(np.linspace(np.round(d_oaspl.min(),1),np.round(d_oaspl.max(),1),30),1)
 
-levels = np.linspace(-4,4,17)
+levels = np.linspace(-3,3,13)
 # levels = np.linspace(0,np.round(d_oaspl.max()*.7/2)*2,int(np.round(d_oaspl.max()*.7/2)+1))
 # levels_c = np.linspace(0,np.round(d_oaspl.max()*.5/2)*2,int(np.round(d_oaspl.max()*.5/2)+1))
 

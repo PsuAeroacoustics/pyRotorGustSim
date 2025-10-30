@@ -80,14 +80,14 @@ def import_results_from_wopwop(cases_directory):
             pred_data.update({k:v[()]})
     return pred_data
 
-def write_results_to_h5(saved_params):
-    with h5py.File(os.path.join(saved_params['case_dir'], 'saved_params.h5'), 'w') as f:
-        for k,v in saved_params.items():
-            if isinstance(v,dict):
-                for k1,v1 in v.items():
-                    f.create_dataset(f'{k}/{k1}', data = v1)
-            else:
-                f.create_dataset(k, data = v)
+# def write_results_to_h5(saved_params):
+#     with h5py.File(os.path.join(saved_params['case_dir'], 'saved_params.h5'), 'w') as f:
+#         for k,v in saved_params.items():
+#             if isinstance(v,dict):
+#                 for k1,v1 in v.items():
+#                     f.create_dataset(f'{k}/{k1}', data = v1)
+#             else:
+#                 f.create_dataset(k, data = v)
 
 
 def write_results_to_h5(saved_params):

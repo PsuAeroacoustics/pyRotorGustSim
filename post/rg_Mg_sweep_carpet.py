@@ -22,8 +22,8 @@ def get_oaspl(cases_dir):
         oaspl.append(20*np.log10(np.sqrt(np.mean(acs_data['function_values'][:,:,:,-1]**2,axis = -1))/20e-6))
     return oaspl
 
-baseline_dir = '/Users/danielweitsman/codes/github/DanWeitsman/unsteady_BEMT/cases/final_designs/sweeps/rg_Mg/baseline_untapered_AR8'
-cases_dir = '/Users/danielweitsman/codes/github/DanWeitsman/unsteady_BEMT/cases/final_designs/sweeps/rg_Mg/sdof_geom_untapered_AR8'
+baseline_dir = '/Users/danielweitsman/codes/github/DanWeitsman/unsteady_BEMT/cases/final_designs/sweeps/rg_Mg/baseline_untapered_AR8_unsteady'
+cases_dir = '/Users/danielweitsman/codes/github/DanWeitsman/unsteady_BEMT/cases/final_designs/sweeps/rg_Mg/sdof_geom_untapered_AR8_unsteady'
 eps = False
 
 cases = [x for x  in os.listdir(cases_dir) if os.path.isdir(os.path.join(cases_dir,x))]
@@ -66,9 +66,9 @@ loads = []
 r_ind_select = int(0.9*saved_params_bl[cases[0]]['N_elements'])  # Select the last 25% of the rotor radius for gust width calculatio
 
 for i,case in enumerate(cases):
-    h.append(saved_params_bl[case]['h_gust'][-int(2*np.pi/saved_params_bl[case]['dpsi']):]*saved_params_bl[case]['AR'])
-    v_gust.append(saved_params_bl[case]['v_gust'][-int((2*np.pi)/saved_params_bl[case]['dpsi']):])
-    loads.append(saved_params_bl[case]['loads'][-int((2*np.pi)/saved_params_bl[case]['dpsi']):])
+    h.append(saved_params_filt[case]['h_gust'][-int(2*np.pi/saved_params_bl[case]['dpsi']):]*saved_params_bl[case]['AR'])
+    v_gust.append(saved_params_filt[case]['v_gust'][-int((2*np.pi)/saved_params_bl[case]['dpsi']):])
+    loads.append(saved_params_filt[case]['loads'][-int((2*np.pi)/saved_params_bl[case]['dpsi']):])
 
     max_ind = v_gust[i][:,r_ind_select].argmax(axis = 0)
     start_ind = v_gust[i][:,r_ind_select][:max_ind+1].argmin(axis = 0)+1
@@ -90,11 +90,12 @@ gust_width_sort_ind = gust_width.argsort()
 
 Mg_sort_ind = np.asarray([i[np.argsort(Mg[i])] for i in gust_width_sort_ind.reshape(9,9)]).flatten()
 
-
+# fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
+# ax.plot(h[0].T[::5].T,-v_gust[0][::5].T)
 
 fig,ax = plt.subplots(1,1, figsize = (6.4,4.5))
 # plt.subplots_adjust(left = .2,top = .925,right = .85,bottom = .13)
-levels = np.linspace(-4,4,33)
+levels = np.linspace(-4,4,17)
 levels_c = np.linspace(-4,4,17)
 
 dist = ax.contourf(gust_width[Mg_sort_ind].reshape(9,9),Mg[Mg_sort_ind].reshape(9,9),d_oaspl[Mg_sort_ind].reshape(9,9),levels = levels,cmap = plt.cm.Spectral.reversed(),norm = mcolors.CenteredNorm())
