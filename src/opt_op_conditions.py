@@ -50,8 +50,8 @@ def main():
 
     def write_param_files(x0):
         
-        input_params['gust_params']['strength'] = x0[0]
-        input_params['gust_params']['core_size']  = x0[1]
+        input_params['af_params']['radius'] = x0[0]
+        input_params['af_params']['core_size']  = x0[1]
         input_params['flight_params']['omega']=x0[2]*input_params['flight_params']['sos']/geom_params['radius']
 
         with open(os.path.join(cwd,args.input_param),"w") as param_file:
@@ -92,9 +92,9 @@ def main():
     dimenstion_params = lambda x: x*np.diff(bounds).squeeze()+bounds[:,0]
 
     
-    x0 = [input_params['gust_params']['strength'],input_params['gust_params']['core_size'],input_params['flight_params']['omega']*geom_params['radius']/input_params['flight_params']['sos']]
+    x0 = [input_params['af_params']['radius'],input_params['af_params']['core_size'],input_params['flight_params']['omega']*geom_params['radius']/input_params['flight_params']['sos']]
     
-    # x0 = [input_params['gust_params']['strength'],input_params['gust_params']['core_size']]
+    # x0 = [input_params['af_params']['radius'],input_params['af_params']['core_size']]
 
     res = minimize(opt_params, x0 = x0, args=(), method='L-BFGS-B', jac=None, hess=None, hessp=None, bounds=Bounds(lb = np.zeros(3), ub = np.ones(3),keep_feasible=True), constraints=(), tol=1e-2, callback=None, options={'maxiter':10,'disp':True})
     print('All Done!')

@@ -134,10 +134,10 @@ def main():
     if args.plot:
          if args.filt or args.opt:
                 if 'sigma' in res_param:
-                    list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_filt_load_dist,plot_res_resp]))
+                    list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_p_tseries,plot_filt_load_dist,plot_res_resp]))
                 else:
-                    list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_filt_load_dist,plot_res_resp,plot_res_params]))
-         list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_load_tseries,plot_load_dist]))
+                    list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_p_tseries,plot_filt_load_dist,plot_res_resp,plot_res_params]))
+         list(map(lambda f:f(geom_params,input_params,res_param,observer_params,acs_params,saved_params), [plot_p_tseries,plot_load_tseries,plot_load_dist]))
 
     write_results_to_h5(saved_params)
     update_res_params(args.res_param,res_param)

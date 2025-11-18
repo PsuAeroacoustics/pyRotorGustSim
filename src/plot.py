@@ -20,45 +20,46 @@ def plot_p_tseries(geom_params,input_params,res_param,observer_params,acs_params
 
 #   imports reformatted data from wopwop in a dictionary
     pred_data = import_results_from_wopwop(cases_directory=saved_params['acs_dir'])
-    pred_data['geometry_values'] = np.flip(pred_data['geometry_values'],axis = 0).squeeze()
-    pred_data['function_values'] = np.flip(pred_data['function_values'],axis = 0).squeeze()
+    pred_data['geometry_values'] = np.flip(pred_data['geometry_values'],axis = 0)
+    pred_data['function_values'] = np.flip(pred_data['function_values'],axis = 0)
 
-    theta = np.round(np.arctan2(pred_data['geometry_values'][:,0,1],pred_data['geometry_values'][:,0,0])*180/np.pi)%(360)
+    theta = np.round(np.arctan2(pred_data['geometry_values'][:,:,0,1],pred_data['geometry_values'][:,:,0,0])*180/np.pi)%360
+    phi = np.round(np.arctan2(pred_data['geometry_values'][:,:,0,-1],np.linalg.norm((pred_data['geometry_values'][:,:,0,0],pred_data['geometry_values'][:,:,0,1]),axis = 0))*180/np.pi)
+
     dt = pred_data['function_values'][0,1,0]-pred_data['function_values'][0,0,0]
     psi = (pred_data['function_values'][0,:,0]/((saved_params['omega']/(2*np.pi))**-1)*360)%360
 
-    for mic_iter in range(len(pred_data['function_values'])):
-        fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
-        plt.subplots_adjust(left = .22,bottom = .15)
+    for theta_iter in range(pred_data['geometry_values'].shape[0]):
+        for phi_iter in range(pred_data['geometry_values'].shape[1]):
 
-        if acs_params['thicknessNoiseFlag'] or acs_params['totalNoiseFlag']:
-            ax.plot(pred_data['function_values'][mic_iter,:,0],pred_data['function_values'][mic_iter,:,1])
-            ax.plot(pred_data['function_values'][mic_iter,:,0],pred_data['function_values'][mic_iter,:,2])
-            ax.plot(pred_data['function_values'][mic_iter,:,0],pred_data['function_values'][mic_iter,:,-1])
-            ax.legend(['Thickness','Loading','Total'])
-        else:
-            ax.plot(pred_data['function_values'][mic_iter,:,0],pred_data['function_values'][mic_iter,:,-1])
+            fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
+            plt.subplots_adjust(left = .22,bottom = .15)
+
+            if acs_params['thicknessNoiseFlag'] or acs_params['totalNoiseFlag']:
+                ax.plot(pred_data['function_values'][theta_iter,phi_iter,:,0],pred_data['function_values'][theta_iter,phi_iter,:,1])
+                ax.plot(pred_data['function_values'][theta_iter,phi_iter,:,0],pred_data['function_values'][theta_iter,phi_iter,:,2])
+                ax.plot(pred_data['function_values'][theta_iter,phi_iter,:,0],pred_data['function_values'][theta_iter,phi_iter,:,-1])
+                ax.legend(['Thickness','Loading','Total'])
+            else:
+                ax.plot(pred_data['function_values'][theta_iter,phi_iter,:,0],pred_data['function_values'][theta_iter,phi_iter,:,-1])
 
 
-        ax.set_title(rf'$\\theta = {theta[mic_iter]}^\circ$')
-        ax.set_ylabel(r'Pressure \ [Pa]')
-        ax.set_xlabel(r'Time \ [s]')
-        # ax.axis([270,320,-120,60])
-        min_ind = pred_data['function_values'][mic_iter,:,-1].argmin()
-        # ax.set_xlim([0,360])
-        ax.set_xlim([pred_data['function_values'][mic_iter,min_ind,0]-0.1*(saved_params['omega']/(2*np.pi))**-1,pred_data['function_values'][mic_iter,min_ind,0]+0.1*(saved_params['omega']/(2*np.pi))**-1])
-        # ax.set_yticks(np.arange(10)*20-120)
-        # ax.set_ylim([1.1*pred_data['function_values'][:,:,-1].min(),1.1*pred_data['function_values'][:,:,-1].max()])
-        # ax.set_ylim([-25,20])
-        ax.grid()
-        plt.savefig(os.path.join(saved_params['case_dir'],f'tseries_{mic_iter}.png'),format = 'png')
-        plt.close()
+            ax.set(title = rf'$\\theta = {theta[theta_iter,phi_iter]}^\circ, \phi = {phi[theta_iter,phi_iter]}^\circ$',ylabel = r'Pressure \ [Pa]', xlabel =r'Time \ [s]' )
+            # min_ind = pred_data['function_values'][mic_iter,:,-1].argmax()
+            # ax.set_xlim([0,360])
+            # ax.set_xlim([pred_data['function_values'][mic_iter,min_ind,0]-0.5*(saved_params['omega']/(2*np.pi))**-1,pred_data['function_values'][mic_iter,min_ind,0]+0.5*(saved_params['omega']/(2*np.pi))**-1])
+            # ax.set_yticks(np.arange(10)*20-120)
+            # ax.set_ylim([1.1*pred_data['function_values'][:,:,-1].min(),1.1*pred_data['function_values'][:,:,-1].max()])
+            # ax.set_ylim([-25,20])
+            ax.grid()
+            plt.savefig(os.path.join(saved_params['case_dir'],f'tseries_{(theta_iter+1)*phi_iter}.png'),format = 'png')
+            plt.close()
 
 def plot_gust_profile(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
     
     h = (np.arange(50+1)*(1.4+.2)/50-.2)/39.37/geom_params['radius']
     n = 2
-    v_gust = input_params['gust_params']['strength']/(2*np.pi*geom_params['radius'])*(h/((input_params['gust_params']['core_size']/geom_params['AR'])**(2*n)+(h)**(2*n))**(1/n))
+    v_gust = input_params['af_params']['radius']/(2*np.pi*geom_params['radius'])*(h/((input_params['af_params']['core_size']/geom_params['AR'])**(2*n)+(h)**(2*n))**(1/n))
     print(f'max gust velocity = {v_gust.max()*3.281} fps')
     fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
     plt.subplots_adjust(left = .2,bottom = .15)

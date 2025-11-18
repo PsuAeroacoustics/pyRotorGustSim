@@ -18,7 +18,7 @@ def wopwop_input_configure(geom_params,input_params,res_param,observer_params,ac
     # observer_params.update({'highPassFrequency':saved_params['omega']/(2*np.pi)*6})
 
     #   Determines whether to write out a observer file or not based on what is provided in the corresponding JSON file
-    if not 'nbTheta' in observer_params or 'nbx' in observer_params or 'xLoc' in observer_params:
+    if 'nbTheta' not in observer_params and 'radius' in observer_params:
 
         # np.cumsum(np.abs(np.diff(np.sin(2*np.arange(21)*np.pi/20)*30)))+120 - 2sin distribution
         radius = np.array(observer_params['radius'])
@@ -40,8 +40,10 @@ def wopwop_input_configure(geom_params,input_params,res_param,observer_params,ac
     
     observer_in = ObserverIn(**observer_params)
 
-    
-    aircraft_container = ContainerIn(Title='aircraft',nbContainer = 1)
+    if input_params['computational_params']['unsteady_loading']:
+        aircraft_container = ContainerIn(Title='aircraft',nbContainer = 2)
+    else:
+        aircraft_container = ContainerIn(Title='aircraft',nbContainer = 1)
 
     if acs_params['thicknessNoiseFlag'] or acs_params['totalNoiseFlag']:
         rotor_container = ContainerIn(Title='rotor',nbContainer = 2*geom_params['number_of_blades'],nbBase=1)
@@ -62,6 +64,10 @@ def wopwop_input_configure(geom_params,input_params,res_param,observer_params,ac
             # nml.append(CB(Title=f'align blade {b_iter} with rear of rotor disk',AxisValue=[0,0,1],AngleValue=-np.pi))
             # nml.append(CB(Title=f'blade {b_iter} th0',AxisValue=[1,0,0],AngleValue=saved_params['th0']))
 
+    if input_params['computational_params']['unsteady_loading']:
+        nml.append(ContainerIn(Title='airframe',nbContainer = 1,nbBase=0))
+        nml.append(ContainerIn(Title=f'airframe loading',nbBase=0,patchGeometryFile = f'airframe_geometry.dat',patchLoadingFile = f'airframe_loading.dat',dtau = saved_params['t'][-1]/(observer_params['nt']-1)))
+
     write_nml_file(os.path.join(saved_params['acs_dir'],f"{input_params['case_name']}.nam"),nml)
     case = caseName(globalFolderName = saved_params['acs_dir'],caseNameFile=f"{input_params['case_name']}.nam")
     write_nml_file(os.path.join(saved_params['case_dir'],'cases.nam'),[case])
@@ -72,4 +78,9 @@ def wopwop_input_configure(geom_params,input_params,res_param,observer_params,ac
 
     for b_iter in range(geom_params['number_of_blades']):
         aperiodic_compact_loading_write(os.path.join(saved_params['acs_dir'],f'loading_blade_{b_iter}.dat'),t = saved_params['t'], loads = saved_params['loads'],ascii = False)
+
+    if input_params['computational_params']['unsteady_loading']:
+        constant_compact_geometry_write(os.path.join(saved_params['acs_dir'],f'airframe_geometry.dat'),nodes=saved_params['af_nodes'],norms=saved_params['af_norms'],ascii=False)
+        aperiodic_compact_loading_write(os.path.join(saved_params['acs_dir'],f'airframe_loading.dat'),t = saved_params['t'], loads = saved_params['loads_af'],ascii = False)
+
 
