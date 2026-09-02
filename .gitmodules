@@ -1,0 +1,3 @@
+[submodule "/Users/danielweitsman/codes/github/DanWeitsman/unsteady_BEMT/dependencies/pyWopwop"]
+	path = /Users/danielweitsman/codes/github/DanWeitsman/unsteady_BEMT/dependencies/pyWopwop
+	url = https://github.com/OpenWopwop/pyWopwop.git

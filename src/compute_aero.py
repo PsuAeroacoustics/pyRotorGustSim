@@ -5,7 +5,6 @@ from bemt import *
 import numpy as np
 import aerosandbox as asb
 import scipy.optimize as opt
-import matplotlib.pyplot as plt
 # import neuralfoil as nf
 # from xfoil import XFoil
 # from xfoil import model
@@ -334,8 +333,8 @@ def compute_aero(geom_params,input_params,res_param,observer_params,acs_params,s
     lifting_line_norms = np.expand_dims(np.array([np.zeros(N_elements),np.zeros(N_elements),np.ones(N_elements)]).T,axis = 0)
 
     if input_params['computational_params']['unsteady_loading']:
-        saved_params.update({'t':t,'iterations':iterations,'r_elem':ac.rotors[0].blades[0].elems,'r':ac.rotors[0].blades[0].r,"th":ac.rotors[0].blades[0].th,'airfoil':geom_params['airfoil'],'airfoil_points':input_params['computational_params']['airfoil_elements'],'th_tw':th_tw,'TR':TR,'AR':AR,'R':R,'e':e,'c':ac.rotors[0].blades[0].c,'dpsi':dpsi,'dt':dt,'sos':sos,'N_elements':N_elements,'omega':omega,'psi':psi,'h_gust':h,'v_gust':v_gust,'U':U,'s':s,'th0':th0,'CL':CL,'aoa':aoa_eff,'phi_eff':phi_eff,'dCT':dCT,'dCP':dCP,'loads':loads,'lifting_line_nodes':lifting_line_nodes,'lifting_line_norms':lifting_line_norms})
+        saved_params.update({'t':t,'iterations':iterations,'r_elem':ac.rotors[0].blades[0].elems,'c_elem':ac.rotors[0].blades[0].c_elems,'r':ac.rotors[0].blades[0].r,"th":ac.rotors[0].blades[0].th,'airfoil':geom_params['airfoil'],'airfoil_points':input_params['computational_params']['airfoil_elements'],'th_tw':th_tw,'TR':TR,'AR':AR,'R':R,'e':e,'c':ac.rotors[0].blades[0].c,'dpsi':dpsi,'dt':dt,'sos':sos,'N_elements':N_elements,'omega':omega,'psi':psi,'h_gust':h,'v_gust':v_gust,'U':U,'s':s,'th0':th0,'CL':CL,'aoa':aoa_eff,'phi_eff':phi_eff,'dCT':dCT,'dCP':dCP,'loads':loads,'lifting_line_nodes':lifting_line_nodes,'lifting_line_norms':lifting_line_norms})
     else:
-        saved_params.update({'t':t,'iterations':iterations,'r_elem':ac.rotors[0].blades[0].elems,'r':ac.rotors[0].blades[0].r,"th":ac.rotors[0].blades[0].th,'airfoil':geom_params['airfoil'],'airfoil_points':input_params['computational_params']['airfoil_elements'],'th_tw':th_tw,'TR':TR,'AR':AR,'R':R,'e':e,'c':ac.rotors[0].blades[0].c,'dpsi':dpsi,'dt':dt,'sos':sos,'N_elements':N_elements,'omega':omega,'psi':psi,'th0':th0,'CL':ac.rotors[0].blades[0].CL,'CD':ac.rotors[0].blades[0].CD,'aoa':ac.rotors[0].blades[0].aoa,'dCT':dCT,'dCP':dCP,'loads':loads,'lifting_line_nodes':lifting_line_nodes,'lifting_line_norms':lifting_line_norms})
+        saved_params.update({'t':t,'iterations':iterations,'r_elem':ac.rotors[0].blades[0].elems,'c_elem':ac.rotors[0].blades[0].c_elems,'r':ac.rotors[0].blades[0].r,"th":ac.rotors[0].blades[0].th,'airfoil':geom_params['airfoil'],'airfoil_points':input_params['computational_params']['airfoil_elements'],'th_tw':th_tw,'TR':TR,'AR':AR,'R':R,'e':e,'c':ac.rotors[0].blades[0].c,'dpsi':dpsi,'dt':dt,'sos':sos,'N_elements':N_elements,'omega':omega,'psi':psi,'th0':th0,'CL':ac.rotors[0].blades[0].CL,'CD':ac.rotors[0].blades[0].CD,'aoa':ac.rotors[0].blades[0].aoa,'dCT':dCT,'dCP':dCP,'loads':loads,'lifting_line_nodes':lifting_line_nodes,'lifting_line_norms':lifting_line_norms})
 
 

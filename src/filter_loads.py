@@ -235,7 +235,7 @@ def filter_loads(geom_params,input_params,res_param,observer_params,acs_params,s
         res_param['t'] = t 
 
     # total volume of rotor blade [m^3]
-    V0 = np.trapz(np.trapz(np.expand_dims(af.coordinates[:,0],axis = -1)*saved_params['c'],np.expand_dims(af.coordinates[:,-1],axis = -1)*saved_params['c'],axis = 0),x = saved_params['r']*saved_params['R'])
+    V0 = np.trapezoid(np.trapezoid(np.expand_dims(af.coordinates[:,0],axis = -1)*saved_params['c'],np.expand_dims(af.coordinates[:,-1],axis = -1)*saved_params['c'],axis = 0),x = saved_params['r']*saved_params['R'])
     r_elem = np.arange(saved_params['N_elements']+1)/saved_params['N_elements']*(saved_params['R']-saved_params['e'])+saved_params['e']
 
     # chordwise extent of the treatment

@@ -1,14 +1,14 @@
 
-from wopwop_input_generator import *
-
+# from wopwop_input_generator import *
+from wopwop_in import *
 #%%
 def wopwop_input_configure(geom_params,input_params,res_param,observer_params,acs_params,saved_params):
 
     # initializes namelist and environmental object
     nml = []
-    
+
+
     environment_in = EnvironmentIn(**acs_params)
-    
     environment_const = EnvironmentConstants()
     
     # observer_params.update({'Title':'mic array','attachedTo':'aircraft','tMin':saved_params['t'][-int(input_params['computational_params']['number_of_revs']*2*np.pi/saved_params['dpsi'])],'tMax':saved_params['t'][-1]})
@@ -40,7 +40,7 @@ def wopwop_input_configure(geom_params,input_params,res_param,observer_params,ac
     
     observer_in = ObserverIn(**observer_params)
 
-    
+
     aircraft_container = ContainerIn(Title='aircraft',nbContainer = 1)
 
     if acs_params['thicknessNoiseFlag'] or acs_params['totalNoiseFlag']:
@@ -65,11 +65,21 @@ def wopwop_input_configure(geom_params,input_params,res_param,observer_params,ac
     write_nml_file(os.path.join(saved_params['acs_dir'],f"{input_params['case_name']}.nam"),nml)
     case = caseName(globalFolderName = saved_params['acs_dir'],caseNameFile=f"{input_params['case_name']}.nam")
     write_nml_file(os.path.join(saved_params['case_dir'],'cases.nam'),[case])
-    constant_compact_geometry_write(os.path.join(saved_params['acs_dir'],f'lifting_line_geometry.dat'),nodes=saved_params['lifting_line_nodes'],norms=saved_params['lifting_line_norms'],ascii=False)
-    
+    # constant_compact_geometry_write(os.path.join(saved_params['acs_dir'],f'lifting_line_geometry.dat'),nodes=saved_params['lifting_line_nodes'],norms=saved_params['lifting_line_norms'],ascii=False)
+
+    lifting_line_geometry_obj = patch_data(os.path.join(saved_params['acs_dir'],f'lifting_line_geometry.dat'),data_type = 1,structured = 1,nodes = saved_params['lifting_line_nodes'],normals = saved_params['lifting_line_norms'],dimensions = (saved_params['N_elements'],1))
+    lifting_line_geometry_obj.write(ascii=False)
+
     if acs_params['thicknessNoiseFlag'] or acs_params['totalNoiseFlag']:
-        constant_compact_geometry_write(os.path.join(saved_params['acs_dir'],f'blade_geometry.dat'),nodes=saved_params['blade_nodes'],norms=saved_params['blade_norms'],ascii=False)
+        # constant_compact_geometry_write(os.path.join(saved_params['acs_dir'],f'blade_geometry.dat'),nodes=saved_params['blade_nodes'],norms=saved_params['blade_norms'],ascii=False)
+
+        blade_geometry_obj = patch_data(os.path.join(saved_params['acs_dir'],f'blade_geometry.dat'),data_type = 1,structured = 1,node_centered = 1,nodes = saved_params['blade_nodes'],normals = saved_params['blade_norms'],dimensions = (
+saved_params['blade_nodes'].shape[0],saved_params['blade_nodes'].shape[1]))
+        blade_geometry_obj.write(ascii=False)
+
 
     for b_iter in range(geom_params['number_of_blades']):
-        aperiodic_compact_loading_write(os.path.join(saved_params['acs_dir'],f'loading_blade_{b_iter}.dat'),t = saved_params['t'], loads = saved_params['loads'],ascii = False)
+        # aperiodic_compact_loading_write(os.path.join(saved_params['acs_dir'],f'loading_blade_{b_iter}.dat'),t = saved_params['t'], loads = saved_params['loads'],ascii = False)
 
+        loading_obj = functional_data(os.path.join(saved_params['acs_dir'],f'loading_blade_{b_iter}.dat'),data_type = 3,structured = 1, keys = saved_params['t'],dimensions = (saved_params['N_elements'],1),loads = saved_params['loads'])
+        loading_obj.write(ascii=True)

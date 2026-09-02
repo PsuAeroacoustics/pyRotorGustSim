@@ -7,7 +7,7 @@ import numpy as np
 import re
 
 sys.path.insert(0,os.path.join(os.path.dirname(os.path.dirname(__file__)),'dependencies','pyWopwop'))
-import wopwop
+import wopwop_out
 
 #%%
 

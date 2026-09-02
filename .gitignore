@@ -5,4 +5,6 @@ src/__pycache__/
 bo105.p3d
 .DS_Store
 /cases
-/dependencies
+/af_gust_interaction
+.venv
+v_th.

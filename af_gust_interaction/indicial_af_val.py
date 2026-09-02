@@ -1,16 +1,17 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import integrate
+import plot_styles
 #%%
 
 cfd_data_f = 'cfd_data.csv'
-cfd_data = np.loadtxt(cfd_data_f,delimiter =',').astype(float)
+cfd_data = np.loadtxt(os.path.join(os.getcwd(),'af_gust_interaction',cfd_data_f),delimiter =',').astype(float)
 
 #%%
 c = 1
 sos = 340
 M = .65
+# normalized by (U*c)
 gamma = 0.2*sos*M*c
 y_v = -.26*c
 dist = 40*c
@@ -19,12 +20,26 @@ n = 1
 
 #%%
 
+r = (np.arange(100)/(100-1)-1/2)*10
+v_th = gamma/(2*np.pi*r_c*r)*(1-np.exp(-1.25643*r**2))
+
+fig,ax = plt.subplots(1,1, figsize = (3,3/1.25))
+plt.subplots_adjust(left = .22,bottom = 0.2,right = 0.9,top = 0.9)
+ax.plot(r,v_th/(gamma/(2*np.pi*r_c)))
+ax.set(xlabel = r'$r/r_c$',ylabel = r'$V_{\theta} / (\Gamma/2\pi r_c)$',xlim = [-5,5],ylim = [-1,1])
+ax.grid()
+plt.savefig('v_th.pdf',format = 'pdf',pad_inches=.05,bbox_inches='tight')
+
+
+
+#%%
+
 dt = c/(8*M*sos)
 N_steps = int((dist/(M*sos))/dt)
 
 t = np.arange(N_steps)*dt
 
-x_b,y_b= .25*c,0
+x_b,y_b= .1*c,0
 
 x_v =M*sos*t-dist/2
 y_v = np.ones(N_steps)*y_v
@@ -100,17 +115,22 @@ for i in range(1,N_steps):
         print(X)
         print(Y)
 
-#%%
 
 #%%
 
-fig,ax = plt.subplots(1,1, figsize = (4.5,4.5))
-plt.subplots_adjust(left = .175)
-ax.scatter(cfd_data[:,0],cfd_data[:,-1],c = 'black')
-ax.plot(x_v[1:]/c,dCL[1:])
-ax.plot(x_v[1:]/c,dCL2[1:],linestyle = '--')
-ax.set_xlabel('$x_v/c$')
+fig,ax = plt.subplots(1,1, figsize = (3,3/1.25))
+plt.subplots_adjust(left = .22,bottom = 0.2,right = 0.9,top = 0.9)
+# ax.scatter(cfd_data[:,0],cfd_data[:,-1],c = 'black')
+# ax.plot(x_v[1:]/c,dCL[1:])
+ax.plot(x_v/c,dCL2,linestyle = '-')
 ax.grid()
-ax.set_ylabel('$CL$')
-ax.legend(['CFD','Indicial (Linear)', 'Indicial (CFD)'])
-ax.axis([-5,5,-.25,.1])
+ax.set(xlim = [-5,5],ylim = [-0.22,0.22],xlabel = r'$x_v/c$',ylabel = r'$C_L$')
+plt.savefig('cl.pdf',format = 'pdf',pad_inches=.05,bbox_inches='tight')
+
+fig,ax = plt.subplots(1,1, figsize = (3,3/1.25))
+plt.subplots_adjust(left = .22,bottom = 0.2,right = 0.9,top = 0.9)
+ax.plot(x_v/c,np.gradient(dCL2,edge_order=2)/dt,linestyle = '-')
+ax.grid()
+plt.ticklabel_format(axis='y', style='sci', scilimits=(0, 0), useMathText=True)
+ax.set(xlim = [-5,5],ylim = [-110,110],xlabel = r'$x_v/c$',ylabel = r'$\partial C_L/\partial t \quad [s^{-1}]$')        
+plt.savefig('dcl.pdf',format = 'pdf',pad_inches=.05,bbox_inches='tight')

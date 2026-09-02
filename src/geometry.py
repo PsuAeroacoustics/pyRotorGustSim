@@ -28,6 +28,7 @@ class rotor:
         elems = (np.arange(self.N_elements+1)*(self.R-self.e)/(self.N_elements)+self.e)/self.R
         r = 0.5*(elems[1:]+elems[:-1])
         self.c = R/AR*(TR-(TR-1)*r)
+        c_elem = R/AR*(TR-(TR-1)*elems)
         sigma = self.Nb*self.c/(np.pi*self.R)
         self.sigma = np.trapezoid(sigma,x = r)
         th = self.th0+r*self.th_tw
@@ -40,7 +41,7 @@ class rotor:
         Re = omega*R*r*self.c/atmos.nu
         M = omega*R*r/atmos.sos
 
-        self.blades = [blade(r,elems,self.c,self.R,sigma,th,af,Cl_a=Cl_a,offset = b_iter*2*np.pi/self.Nb,Re = Re,M = M) for b_iter in range(self.Nb)]
+        self.blades = [blade(r,elems,c_elem,self.c,self.R,sigma,th,af,Cl_a=Cl_a,offset = b_iter*2*np.pi/self.Nb,Re = Re,M = M) for b_iter in range(self.Nb)]
 
     def set_loads(self):
         self.CT =np.sum(np.array([np.trapezoid(b.dCT,x = b.r) for b in self.blades])) 
@@ -48,10 +49,11 @@ class rotor:
 
 
 class blade:
-    def __init__(self,r,elems,c,R,sigma,th,af,Cl_a,offset,Re,M):
+    def __init__(self,r,elems,c_elems,c,R,sigma,th,af,Cl_a,offset,Re,M):
         self.r = r
         self.elems = elems
         self.c = c
+        self.c_elems = c_elems
         self.R = R
         self.sigma = sigma
         self.th = th
