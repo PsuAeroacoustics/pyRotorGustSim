@@ -2,6 +2,9 @@
 
 import argparse
 import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)),'dependencies','pyResonator'))
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)),'dependencies','pyWopwop'))
 from shutil import rmtree
 from help_funcs import *
 from compute_aero import *

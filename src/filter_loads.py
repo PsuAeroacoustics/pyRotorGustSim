@@ -1,19 +1,14 @@
 import numpy as np
-from scipy import io
 import os
 import sys
-import h5py
 from scipy.optimize import differential_evolution
 import aerosandbox as asb
-# from xfoil import XFoil
-# from xfoil import model
 
 sys.path.insert(0,os.path.join(os.path.dirname(os.path.dirname(__file__)),'dependencies','resonator'))
 
 from help_funcs import *
 from res_funcs import *
 from wopwop_input_generator import aperiodic_compact_loading_write
-from plot import plot_res_resp
 
 #%%
 

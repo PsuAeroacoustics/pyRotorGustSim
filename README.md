@@ -27,7 +27,6 @@ Important source modules:
 | [`src/help_funcs.py`](src/help_funcs.py) | Case-file loading, HDF5 file I/O, WOPWOP execution |
 | [`src/plot.py`](src/plot.py) | Load, filter-response, gust, and acoustic plotting utility|
 
-## Prerequisites
 
 ## Requirements
 
