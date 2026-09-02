@@ -1,0 +1,22 @@
+{	"case_name":"example_case",
+	"computational_params": {
+		"d_psi": 0.25,
+		"spanwise_elements": 48,
+		"airfoil_elements": 100,
+        "number_of_revs": 2,
+		"unsteady_loading": true
+	},
+	"flight_params":
+		{
+			"density": 1.2055,
+			"kinematic_viscosity":14.88e-6,
+			"omega": 403.5826,
+			"sos": 341.7,
+			"C_T_target":0.004
+		},
+		"gust_params": {
+			"strength": 0.415109,
+			"peak_location": 0.15,
+			"azimuthal_location": 90
+		  }
+}

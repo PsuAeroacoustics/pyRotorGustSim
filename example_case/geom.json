@@ -1,0 +1,14 @@
+{
+	"radius": 0.381,
+	"origin": [0, 0, 0],
+	"number_of_blades": 1,
+	"AR": 12,
+	"TR":1,
+	"theta_tw": 0,
+	"theta_initial": 10,
+	"r_c": 0.08126,
+	"airfoil": "naca0015",
+	"airfoil_points": 200
+}
+
+

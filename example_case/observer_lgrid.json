@@ -1,0 +1,11 @@
+{
+	"highPassFrequency":1,
+	"nt":1440,
+	"radius": 1.54305,
+	"nbTheta": 11,
+	"nbPsi": 1,
+	"thetaMin": 120,
+	"thetaMax":240,
+	"psiMin": -30,
+	"psiMax": -30
+}
